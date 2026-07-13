@@ -56,6 +56,15 @@ const userSchema = new mongoose.Schema(
         },
         lastLogin: {
             type: Date
+        },
+        refreshToken: {
+            type: String
+        },
+        forgotPasswordToken: {
+            type: String
+        },
+        forgotPasswordExpiry: {
+            type: Date
         }
     },
     {
