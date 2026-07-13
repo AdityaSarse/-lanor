@@ -8,6 +8,6 @@ app.use(express.json());
 app.use(cookieParser());
 
 // Routes
-app.use("/api/v1/auth", authRouter);
+app.use("/api/auth", authRouter);
 
 module.exports = app;
