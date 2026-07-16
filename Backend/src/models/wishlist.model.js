@@ -16,7 +16,7 @@ const wishlistItemSchema = new mongoose.Schema(
             default: Date.now
         }
     },
-    { _id: false } // no separate _id per entry — product itself is the identifier
+    { _id: true } // each entry gets its own _id — lets frontend delete a single item cleanly via its _id
 );
 
 // ─── Wishlist Schema ──────────────────────────────────────────────────────────
