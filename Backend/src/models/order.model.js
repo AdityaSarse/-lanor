@@ -29,11 +29,33 @@ const orderItemSchema = new mongoose.Schema(
             trim: true
         },
 
-        // Primary product image URL at the time of purchase
-        image: {
+        // Brand at time of purchase — useful for invoices and brand analytics
+        brand: {
             type: String,
-            required: [true, "Product image snapshot is required"],
+            required: [true, "Brand snapshot is required"],
             trim: true
+        },
+
+        // SKU at time of purchase — stays accurate even if product is archived
+        sku: {
+            type: String,
+            required: [true, "SKU snapshot is required"],
+            trim: true
+        },
+
+        // Primary product image at the time of purchase
+        // Stored as {url, alt} — consistent with the Product schema
+        image: {
+            url: {
+                type: String,
+                required: [true, "Product image URL snapshot is required"],
+                trim: true
+            },
+            alt: {
+                type: String,
+                trim: true,
+                default: ""
+            }
         },
 
         // Color the customer chose — stored as {name, hex} to match the
@@ -149,9 +171,39 @@ const couponSchema = new mongoose.Schema(
     { _id: false }
 );
 
+// ─── Sub-schema: Status history entry ────────────────────────────────────────
+// Powers the order tracking timeline shown to customers.
+// Every time orderStatus changes, push a new entry here.
+const statusHistorySchema = new mongoose.Schema(
+    {
+        status: {
+            type: String,
+            required: true
+        },
+
+        // When this status was applied
+        changedAt: {
+            type: Date,
+            default: Date.now
+        }
+    },
+    { _id: false }
+);
+
 // ─── Order Schema ─────────────────────────────────────────────────────────────
 const orderSchema = new mongoose.Schema(
     {
+        // Human-readable order identifier shown to the customer
+        // Format: ORD-YYYYMMDD-XXXXXX  →  e.g. ORD-20260717-000123
+        // Generated in the controller before saving the order.
+        orderNumber: {
+            type: String,
+            required: true,
+            unique: true,
+            index: true,
+            trim: true
+        },
+
         // The customer who placed the order
         user: {
             type: mongoose.Schema.Types.ObjectId,
@@ -241,11 +293,49 @@ const orderSchema = new mongoose.Schema(
         coupon: {
             type: couponSchema,
             default: () => ({}) // always present, just empty if no coupon used
+        },
+
+        // ─── Status history (order tracking timeline) ──────────────────────
+        // Append a new entry every time orderStatus changes.
+        // Powers the live tracking page customers see.
+        statusHistory: {
+            type: [statusHistorySchema],
+            default: []
+        },
+
+        // ─── Delivery dates ────────────────────────────────────────────────
+        // Set by the controller when the corresponding status is applied.
+
+        // Expected delivery date communicated to the customer at checkout
+        estimatedDelivery: {
+            type: Date,
+            default: null
+        },
+
+        // Set when orderStatus changes to "Delivered"
+        deliveredAt: {
+            type: Date,
+            default: null
+        },
+
+        // Set when orderStatus changes to "Cancelled"
+        cancelledAt: {
+            type: Date,
+            default: null
         }
+
+        // ─── Return info (v2) ──────────────────────────────────────────────
+        // returnReason and returnStatus will be added when return flow is built.
     },
     {
         timestamps: true // createdAt = when the order was placed, updatedAt = last status change
     }
 );
+
+// ─── Compound index ───────────────────────────────────────────────────────────
+// Almost every "My Orders" page runs:
+//   Order.find({ user }).sort({ createdAt: -1 })
+// This index makes that query fast even with millions of orders.
+orderSchema.index({ user: 1, createdAt: -1 });
 
 module.exports = mongoose.model("Order", orderSchema);
