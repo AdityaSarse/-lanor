@@ -12,8 +12,13 @@
 //       "success": true,
 //       "statusCode": 200,
 //       "message": "User fetched successfully",
-//       "data": { ... }
+//       "data": { ... },
+//       "meta": null              ← null when not paginated
 //   }
+//
+// With pagination:
+//   new ApiResponse(200, products, "Products fetched", { page, limit, total })
+//   → { ..., "meta": { "page": 1, "limit": 10, "total": 257 } }
 //
 // Consistent shape across the entire API — mirrors ApiError so the frontend
 // always receives the same four fields regardless of success or failure:
@@ -22,11 +27,17 @@
 //   ❌ Error   → { success: false, statusCode, message, data: null, errors: [] }
 
 class ApiResponse {
-    constructor(statusCode, data, message = "Success") {
+    constructor(
+        statusCode,
+        data,
+        message = "Success",
+        meta = null // optional pagination/extra metadata
+    ) {
         this.success = statusCode < 400; // true for 2xx/3xx, false for 4xx/5xx
         this.statusCode = statusCode;
         this.message = message;
         this.data = data;
+        this.meta = meta;
     }
 }
 
