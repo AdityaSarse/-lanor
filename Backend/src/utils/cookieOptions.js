@@ -4,21 +4,40 @@
 //
 // accessTokenOptions  → short-lived, matches ACCESS_TOKEN_EXPIRY
 // refreshTokenOptions → long-lived, matches REFRESH_TOKEN_EXPIRY
+//
+// Required environment variables:
+//   ACCESS_COOKIE_EXPIRES=15    (minutes)
+//   REFRESH_COOKIE_EXPIRES=7   (days)
+//
+// Cross-origin note (production on separate domains):
+//   Change sameSite to "none" and keep secure: true when frontend and backend
+//   are deployed on different origins (e.g. shop.example.com + api.example.com).
+//   "strict" is correct while both run on the same origin or locally.
 
-const isProd = process.env.NODE_ENV === "production";
+const isProduction = process.env.NODE_ENV === "production";
 
-// Access token cookie — kept short-lived (matches token expiry, e.g. 15m)
+// Access token cookie — lifetime matches the JWT (default: 15 minutes)
 const accessTokenOptions = {
-    httpOnly: true,   // not accessible via document.cookie — prevents XSS theft
-    secure: isProd,   // HTTPS only in production; HTTP allowed in development
-    sameSite: "strict" // blocks CSRF by not sending cookie on cross-site requests
+    httpOnly: true,    // not accessible via document.cookie — prevents XSS theft
+    secure: isProduction, // HTTPS only in production; HTTP allowed in development
+    sameSite: "strict", // blocks CSRF by not sending cookie on cross-site requests
+    maxAge:
+        Number(process.env.ACCESS_COOKIE_EXPIRES) *
+        60 *
+        1000 // minutes → milliseconds
 };
 
-// Refresh token cookie — longer-lived (matches token expiry, e.g. 7d or 30d)
+// Refresh token cookie — lifetime matches the JWT (default: 7 days)
 const refreshTokenOptions = {
     httpOnly: true,
-    secure: isProd,
-    sameSite: "strict"
+    secure: isProduction,
+    sameSite: "strict",
+    maxAge:
+        Number(process.env.REFRESH_COOKIE_EXPIRES) *
+        24 *
+        60 *
+        60 *
+        1000 // days → milliseconds
 };
 
 module.exports = { accessTokenOptions, refreshTokenOptions };
