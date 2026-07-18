@@ -8,14 +8,14 @@ const {
     forgotPassword, 
     resetPassword 
 } = require("../controllers/auth.controller");
-const { verifyJWT } = require("../middelwares/auth.middleware");
+const { verifyJWT } = require("../middlewares/auth.middleware");
 
 const router = express.Router();
 
 // Public routes
 router.post("/register", registerUser);
 router.post("/login", loginUser);
-router.post("/refresh", refreshAccessToken);
+router.post("/refresh-token", refreshAccessToken);
 router.post("/forgot-password", forgotPassword);
 router.post("/reset-password", resetPassword);
 
