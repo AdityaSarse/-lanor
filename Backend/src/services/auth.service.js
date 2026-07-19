@@ -26,37 +26,44 @@ const ApiError = require("../utils/ApiError");
 // 3. Creates user
 // 4. Generates tokens
 // Returns: { user, accessToken, refreshToken }
+//
+// Does NOT: set cookies, send response, or access req/res
 const registerUser = async ({ firstName, lastName, email, password, phone, role = "customer" }) => {
-    // Duplicate email check
-    const existingUser = await userModel.findOne({ email });
-    if (existingUser) {
-        throw new ApiError(409, "An account with this email already exists");
+    try {
+        // Duplicate email check
+        const existingUser = await userModel.findOne({ email });
+        if (existingUser) {
+            throw new ApiError(409, "An account with this email already exists");
+        }
+
+        // Hash password — bcrypt auto-generates a salt with cost factor 12
+        const hashedPassword = await bcrypt.hash(password, 12);
+
+        const user = await userModel.create({
+            firstName,
+            lastName,
+            email,
+            phone,
+            password: hashedPassword,
+            role
+        });
+
+        const { accessToken, refreshToken } = await generateTokens(user._id);
+
+        // Re-fetch to get a clean document without sensitive fields.
+        // create() returns the document with password and refreshToken still present.
+        const createdUser = await userModel
+            .findById(user._id)
+            .select("-password -refreshToken");
+
+        return { user: createdUser, accessToken, refreshToken };
+    } catch (error) {
+        // Re-throw ApiErrors as-is (e.g. the 409 above)
+        if (error instanceof ApiError) throw error;
+
+        // Wrap any unexpected failure (DB down, bcrypt throws, etc.)
+        throw new ApiError(500, "Failed to register user");
     }
-
-    // Hash password — bcrypt auto-generates a salt with cost factor 12
-    const hashedPassword = await bcrypt.hash(password, 12);
-
-    const user = await userModel.create({
-        firstName,
-        lastName,
-        email,
-        phone,
-        password: hashedPassword,
-        role
-    });
-
-    const { accessToken, refreshToken } = await generateTokens(user._id);
-
-    // Return user without sensitive fields
-    const safeUser = {
-        _id: user._id,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        email: user.email,
-        role: user.role
-    };
-
-    return { user: safeUser, accessToken, refreshToken };
 };
 
 // ── loginUser ─────────────────────────────────────────────────────────────────
