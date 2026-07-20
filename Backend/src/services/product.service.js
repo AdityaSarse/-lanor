@@ -55,9 +55,14 @@ const createProduct = async (data) => {
         throw new ApiError(409, "A product with this slug already exists");
     }
 
-    // ── 5. Create & return ────────────────────────────────────────────────────
+    // ── 5. Create & return (populated) ──────────────────────────────────────
+    // Re-fetch with populate so the controller/frontend gets complete data
+    // immediately without needing a second GET request.
     const product = await Product.create(data);
-    return product;
+    return Product.findById(product._id)
+        .populate("category",    "name slug")
+        .populate("subCategory", "name slug");
+        // TODO: .populate("brand", "name logo") — uncomment once Brand model exists
 };
 
 // ─── getAllProducts ───────────────────────────────────────────────────────────
@@ -206,11 +211,14 @@ const updateProduct = async (id, data) => {
         }
     }
 
-    // ── 6. Apply changes & persist ────────────────────────────────────────────
+    // ── 6. Apply changes & persist (return populated) ───────────────────────
     Object.assign(product, data);
     await product.save();
 
-    return product;
+    return Product.findById(product._id)
+        .populate("category",    "name slug")
+        .populate("subCategory", "name slug");
+        // TODO: .populate("brand", "name logo") — uncomment once Brand model exists
 };
 
 // ─── deleteProduct ────────────────────────────────────────────────────────────
@@ -330,6 +338,31 @@ const getNewArrivals = async (limit = 10) => {
     return products;
 };
 
+// ─── getTopRatedProducts ─────────────────────────────────────────────────────
+/**
+ * Returns products sorted by average rating then review count.
+ * Wire this up once the Review module is built and averageRating/reviewCount
+ * are being aggregated onto the Product document.
+ *
+ * @param {number} limit - Maximum number of products to return (default 10).
+ * @returns {Promise<Product[]>}
+ */
+const getTopRatedProducts = async (limit = 10) => {
+    const limitNum = Math.min(50, Math.max(1, parseInt(limit, 10)));
+
+    const products = await Product.find({
+        ...ALIVE,
+        status:      "active",
+        reviewCount: { $gt: 0 }   // only include products that actually have reviews
+    })
+        .populate("category", "name slug")
+        .sort({ averageRating: -1, reviewCount: -1 })
+        .limit(limitNum)
+        .lean();
+
+    return products;
+};
+
 // ─────────────────────────────────────────────────────────────────────────────
 module.exports = {
     createProduct,
@@ -339,5 +372,6 @@ module.exports = {
     deleteProduct,
     searchProducts,
     getFeaturedProducts,
-    getNewArrivals
+    getNewArrivals,
+    getTopRatedProducts
 };
