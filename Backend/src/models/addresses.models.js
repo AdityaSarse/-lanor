@@ -4,7 +4,7 @@ const mongoose = require("mongoose");
 // Separate collection — one user can have many addresses.
 // Cleaner, more scalable, and easier to CRUD than embedding in User.
 //
-// ⚠️  Orders do NOT reference this document.
+// ⚠️   Orders do NOT reference this document.
 //     Orders store a snapshot of the shipping address at checkout time.
 //     This way, editing or deleting an address never corrupts order history.
 const addressSchema = new mongoose.Schema(
