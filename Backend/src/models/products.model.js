@@ -219,6 +219,15 @@ const productSchema = new mongoose.Schema(
     }
 );
 
+// ─── Index: Full-text search ──────────────────────────────────────────────────
+// Enables $text queries across the three most search-relevant fields.
+// MongoDB only allows one text index per collection, so all fields are
+// combined here. Add weights if you want name matches to rank higher.
+productSchema.index(
+    { name: "text", description: "text", tags: "text" },
+    { weights: { name: 10, tags: 5, description: 1 }, name: "product_text_search" }
+);
+
 // ─── Virtual: finalPrice ──────────────────────────────────────────────────────
 // Always derived from price & discount — never stale, never out of sync
 productSchema.virtual("finalPrice").get(function () {
