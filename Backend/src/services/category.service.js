@@ -1,4 +1,5 @@
 const Category = require("../models/category.model");
+const Product  = require("../models/products.model");
 const ApiError  = require("../utils/ApiError");
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -212,11 +213,14 @@ const updateCategory = async (id, data) => {
 // ─── deleteCategory ───────────────────────────────────────────────────────────
 /**
  * Soft-deletes a category by stamping `deletedAt`.
- * Prevents deletion if active child categories still exist.
+ *
+ * Guards (both run in parallel):
+ *   - Rejects if active sub-categories still reference this category as parent.
+ *   - Rejects if active products are still assigned to this category.
  *
  * @param {string} id - MongoDB ObjectId string.
  * @returns {Promise<void>}
- * @throws {ApiError} 404 not found | 400 has active children.
+ * @throws {ApiError} 404 not found | 400 has active children or products.
  */
 const deleteCategory = async (id) => {
     const category = await Category.findOne({ _id: id, ...ALIVE });
@@ -224,13 +228,25 @@ const deleteCategory = async (id) => {
         throw new ApiError(404, "Category not found");
     }
 
-    // Guard: prevent deleting a parent that still has active children
-    const hasChildren = await Category.exists({ parent: id, ...ALIVE });
+    // Run both existence checks in parallel — no need to wait for one before the other
+    const [hasChildren, hasProducts] = await Promise.all([
+        Category.exists({ parent: id, ...ALIVE }),
+        Product.exists({ category: id, deletedAt: null })
+    ]);
+
     if (hasChildren) {
         throw new ApiError(
             400,
             "Cannot delete a category that has active sub-categories. " +
             "Delete or reassign the sub-categories first."
+        );
+    }
+
+    if (hasProducts) {
+        throw new ApiError(
+            400,
+            "Cannot delete a category that has active products. " +
+            "Remove or reassign the products first."
         );
     }
 
