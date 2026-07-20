@@ -1,7 +1,9 @@
 const express = require("express");
 const cookieParser = require("cookie-parser");
-const authRouter = require("./routes/auth.routes");
-const errorHandler = require("./middelwares/error.middleware");
+const authRouter     = require("./routes/auth.routes");
+const productRouter  = require("./routes/product.routes");
+const categoryRouter = require("./routes/category.routes");
+const errorHandler   = require("./middelwares/error.middleware");
 
 const app = express();
 
@@ -9,7 +11,9 @@ app.use(express.json());
 app.use(cookieParser());
 
 // ── Routes ────────────────────────────────────────────────────────────────────
-app.use("/api/v1/auth", authRouter);
+app.use("/api/v1/auth",       authRouter);
+app.use("/api/v1/products",   productRouter);
+app.use("/api/v1/categories", categoryRouter);
 
 // ── Global Error Handler ──────────────────────────────────────────────────────
 // Must be registered AFTER all routes — Express uses the 4-arg signature to
