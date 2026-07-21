@@ -17,6 +17,9 @@ const mongoose = require("mongoose");
 // 4. Denormalized stats on Product — averageRating and reviewCount are stored
 //    directly on the Product document and updated whenever a review is
 //    created, edited, or deleted (handled in the service layer).
+//
+// 5. Soft delete — deletedAt: null = alive, consistent with Product / Category
+//    / Brand. Deleted reviews are excluded from all public queries.
 // ─────────────────────────────────────────────────────────────────────────────
 
 // ─── Sub-schema: Review image ─────────────────────────────────────────────────
@@ -102,6 +105,14 @@ const reviewSchema = new mongoose.Schema(
                 validator: (arr) => arr.length <= 5,
                 message: "A review cannot have more than 5 images"
             }
+        },
+
+        // ─── Soft delete ──────────────────────────────────────────────────────
+        // null = alive.  Set to new Date() to "delete" without losing the data.
+        // Consistent with Product, Category, and Brand.
+        deletedAt: {
+            type: Date,
+            default: null
         }
 
         // ─── Helpful votes (v2) ───────────────────────────────────────────────
