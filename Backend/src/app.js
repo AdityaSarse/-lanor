@@ -6,6 +6,7 @@ const categoryRouter = require("./routes/category.routes");
 const brandRouter    = require("./routes/brand.routes");
 const reviewRouter   = require("./routes/review.routes");
 const wishlistRouter = require("./routes/wishlist.routes");
+const cartRouter     = require("./routes/cart.routes");
 const errorHandler   = require("./middelwares/error.middleware");
 
 const app = express();
@@ -20,6 +21,7 @@ app.use("/api/v1/categories", categoryRouter);
 app.use("/api/v1/brands",     brandRouter);
 app.use("/api/v1/reviews",    reviewRouter);
 app.use("/api/v1/wishlist",   wishlistRouter);
+app.use("/api/v1/cart",       cartRouter);
 
 // ── Global Error Handler ──────────────────────────────────────────────────────
 // Must be registered AFTER all routes — Express uses the 4-arg signature to
