@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const { PRODUCT_SIZES } = require("../constants/product.constants");
 
 // ─── Sub-schema: Size entry within a variant ─────────────────────────────────
 const sizeSchema = new mongoose.Schema(
@@ -7,7 +8,7 @@ const sizeSchema = new mongoose.Schema(
             type: String,
             required: true,
             trim: true,
-            enum: ["XS", "S", "M", "L", "XL", "XXL", "XXXL"]
+            enum: PRODUCT_SIZES
         },
         stock: {
             type: Number,

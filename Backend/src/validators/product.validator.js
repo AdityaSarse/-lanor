@@ -1,4 +1,5 @@
 const { body, param } = require("express-validator");
+const { PRODUCT_SIZES } = require("../constants/product.constants");
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Product Validators
@@ -106,7 +107,7 @@ const createProductValidator = [
         .withMessage("At least one size is required"),
 
     body("variants.*.sizes.*.size")
-        .isIn(["XS", "S", "M", "L", "XL", "XXL", "XXXL"])
+        .isIn(PRODUCT_SIZES)
         .withMessage("Invalid size"),
 
     body("variants.*.sizes.*.stock")
@@ -265,7 +266,7 @@ const updateProductValidator = [
 
     body("variants.*.sizes.*.size")
         .optional()
-        .isIn(["XS", "S", "M", "L", "XL", "XXL", "XXXL"])
+        .isIn(PRODUCT_SIZES)
         .withMessage("Invalid size"),
 
     body("variants.*.sizes.*.stock")
