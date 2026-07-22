@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const { ADDRESS_TYPES } = require("../constants/address.constants");
 
 // ─── Address Schema ───────────────────────────────────────────────────────────
 // Separate collection — one user can have many addresses.
@@ -81,7 +82,7 @@ const addressSchema = new mongoose.Schema(
         // Helps the user label and quickly identify saved addresses
         type: {
             type: String,
-            enum: ["Home", "Office", "Other"],
+            enum:    ADDRESS_TYPES,
             default: "Home"
         },
 
