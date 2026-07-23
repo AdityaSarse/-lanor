@@ -24,11 +24,28 @@ const NON_COUNTING_STATUSES = ["Cancelled", "Refunded"];
  * Throws 404 if it doesn't exist.
  *
  * @param {string} code - Coupon code (already uppercased by validator).
- * @returns {Promise<Coupon>}
+ * @returns {Promise<Coupon>} Mongoose document (mutable — needed by validateCoupon).
  * @throws {ApiError} 404
  */
 const findCouponByCode = async (code) => {
     const coupon = await Coupon.findOne({ code, ...ALIVE });
+    if (!coupon) {
+        throw new ApiError(404, "Coupon not found");
+    }
+    return coupon;
+};
+
+/**
+ * Fetches a coupon by its MongoDB ObjectId that is not soft-deleted.
+ * Centralises the repeated findOne + 404 pattern used by getCouponById,
+ * updateCoupon, and deleteCoupon.
+ *
+ * @param {string} id - MongoDB ObjectId string.
+ * @returns {Promise<Coupon>} Mongoose document (mutable — callers may .save()).
+ * @throws {ApiError} 404
+ */
+const getCouponOrThrow = async (id) => {
+    const coupon = await Coupon.findOne({ _id: id, ...ALIVE });
     if (!coupon) {
         throw new ApiError(404, "Coupon not found");
     }
@@ -124,9 +141,12 @@ const getCoupons = async (filters = {}) => {
 
     const query = { ...ALIVE };
 
-    // Prefix search on code — efficient because code has an index
+    // Prefix search on code — efficient because code has an index.
+    // Escape regex metacharacters first so a search like "WELCOME+" doesn't
+    // change the meaning of the pattern (ReDoS defence).
     if (search) {
-        query.code = { $regex: `^${search.toUpperCase()}` };
+        const escaped = search.toUpperCase().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        query.code = { $regex: `^${escaped}` };
     }
 
     // isActive comes in as a query-string, so coerce it
@@ -168,15 +188,12 @@ const getCoupons = async (filters = {}) => {
  * Returns a single coupon by its MongoDB ObjectId.
  *
  * @param {string} id - MongoDB ObjectId string.
- * @returns {Promise<Coupon>}
+ * @returns {Promise<Object>} Plain object (lean).
  * @throws {ApiError} 404 if not found or soft-deleted.
  */
 const getCouponById = async (id) => {
-    const coupon = await Coupon.findOne({ _id: id, ...ALIVE }).lean();
-    if (!coupon) {
-        throw new ApiError(404, "Coupon not found");
-    }
-    return coupon;
+    const coupon = await getCouponOrThrow(id);
+    return coupon.toObject();
 };
 
 // ─── updateCoupon ─────────────────────────────────────────────────────────────
@@ -186,14 +203,11 @@ const getCouponById = async (id) => {
  *
  * @param {string} id   - MongoDB ObjectId of the coupon to update.
  * @param {Object} data - Validated partial fields from the controller.
- * @returns {Promise<Coupon>}
+ * @returns {Promise<Object>} Plain object (lean) of the updated coupon.
  * @throws {ApiError} 404 not found | 409 code conflict.
  */
 const updateCoupon = async (id, data) => {
-    const coupon = await Coupon.findOne({ _id: id, ...ALIVE });
-    if (!coupon) {
-        throw new ApiError(404, "Coupon not found");
-    }
+    const coupon = await getCouponOrThrow(id);
 
     // Only check uniqueness if the code is actually changing
     if (data.code && data.code !== coupon.code) {
@@ -206,7 +220,7 @@ const updateCoupon = async (id, data) => {
     Object.assign(coupon, data);
     await coupon.save();
 
-    return coupon;
+    return coupon.toObject();
 };
 
 // ─── deleteCoupon ─────────────────────────────────────────────────────────────
@@ -219,11 +233,7 @@ const updateCoupon = async (id, data) => {
  * @throws {ApiError} 404 if not found or already deleted.
  */
 const deleteCoupon = async (id) => {
-    const coupon = await Coupon.findOne({ _id: id, ...ALIVE });
-    if (!coupon) {
-        throw new ApiError(404, "Coupon not found");
-    }
-
+    const coupon = await getCouponOrThrow(id);
     coupon.deletedAt = new Date();
     await coupon.save();
 };
@@ -316,14 +326,25 @@ const validateCoupon = async (code, subtotal, userId) => {
  * Uses `$inc` for atomicity — avoids a read-modify-write race condition
  * when two users apply the same coupon simultaneously.
  *
+ * Throws if no document was modified — catches the case where the coupon
+ * was soft-deleted between validation and order confirmation.
+ *
  * @param {string} code - Coupon code (uppercase).
  * @returns {Promise<void>}
+ * @throws {ApiError} 404 if the coupon no longer exists or was deleted.
  */
 const incrementUsage = async (code) => {
-    await Coupon.updateOne(
+    const result = await Coupon.updateOne(
         { code, ...ALIVE },
         { $inc: { usedCount: 1 } }
     );
+
+    if (result.modifiedCount === 0) {
+        throw new ApiError(
+            404,
+            `Could not increment usage for coupon "${code}" — it may have been deleted`
+        );
+    }
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
