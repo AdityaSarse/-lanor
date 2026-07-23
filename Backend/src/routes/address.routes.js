@@ -1,9 +1,9 @@
 const express = require("express");
-const router  = express.Router();
+const router = express.Router();
 
 const addressController = require("../controllers/address.controller");
 
-const validate      = require("../middelwares/validation.middleware");
+const validate = require("../middelwares/validation.middleware");
 const { verifyJWT } = require("../middelwares/auth.middleware");
 
 const {
@@ -18,7 +18,7 @@ const {
 // ─────────────────────────────────────────────────────────────────────────────
 router.use(verifyJWT);
 
-// POST  /api/v1/address  — create a new address
+// POST  /api/ v1/address  — create a new address
 // Auto-sets default if this is the user's first address.
 router.post(
     "/",
