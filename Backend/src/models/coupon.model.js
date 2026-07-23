@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const { DISCOUNT_TYPES } = require("../constants/coupon.constants");
 
 // ─── Coupon Schema ────────────────────────────────────────────────────────────
 const couponSchema = new mongoose.Schema(
@@ -18,27 +19,27 @@ const couponSchema = new mongoose.Schema(
         // ─── Discount type and value ──────────────────────────────────────────
         // "Percentage" → deduct X% of cart value    e.g. 20% off
         // "Fixed"      → deduct flat ₹ amount       e.g. ₹500 off
-        type: {
+        discountType: {
             type: String,
-            required: [true, "Coupon type is required"],
+            required: [true, "Discount type is required"],
             enum: {
-                values: ["Percentage", "Fixed"],
-                message: "Type must be either 'Percentage' or 'Fixed'"
+                values: DISCOUNT_TYPES,
+                message: `Discount type must be one of: ${DISCOUNT_TYPES.join(", ")}`
             }
         },
 
-        // The discount amount — interpreted based on type:
+        // The discount amount — interpreted based on discountType:
         //   Percentage → 0–100 (%)
         //   Fixed      → flat currency amount (₹)
-        value: {
+        discountValue: {
             type: Number,
-            required: [true, "Coupon value is required"],
-            min: [0, "Value cannot be negative"],
+            required: [true, "Discount value is required"],
+            min: [0, "Discount value cannot be negative"],
             validate: {
                 // Prevent nonsensical values like 500% off.
                 // For Fixed coupons, any positive number is valid.
                 validator: function (v) {
-                    return this.type === "Fixed" || v <= 100;
+                    return this.discountType === "Fixed" || v <= 100;
                 },
                 message: "Percentage discount cannot exceed 100%"
             }
@@ -49,7 +50,8 @@ const couponSchema = new mongoose.Schema(
         description: {
             type: String,
             trim: true,
-            default: ""
+            default: "",
+            maxlength: [300, "Description cannot exceed 300 characters"]
         },
 
         // ─── Order constraints ────────────────────────────────────────────────
@@ -102,15 +104,15 @@ const couponSchema = new mongoose.Schema(
         // ─── Validity window ──────────────────────────────────────────────────
 
         // Coupon becomes active on this date
-        startDate: {
+        validFrom: {
             type: Date,
-            required: [true, "Start date is required"]
+            required: [true, "Valid-from date is required"]
         },
 
         // Coupon expires at the end of this date
-        expiryDate: {
+        validUntil: {
             type: Date,
-            required: [true, "Expiry date is required"]
+            required: [true, "Valid-until date is required"]
         },
 
         // ─── Status ───────────────────────────────────────────────────────────
@@ -153,11 +155,17 @@ const couponSchema = new mongoose.Schema(
     }
 );
 
-// ─── Path validator: expiryDate must be after startDate ───────────────────────
+// ─── Path validator: validUntil must be after validFrom ───────────────────────
 // Prevents creating a coupon where the window is already closed.
-// e.g. startDate: 10 Aug, expiryDate: 5 Aug ❌
-couponSchema.path("expiryDate").validate(function (value) {
-    return value > this.startDate;
-}, "Expiry date must be after the start date");
+// e.g. validFrom: 10 Aug, validUntil: 5 Aug ❌
+couponSchema.path("validUntil").validate(function (value) {
+    return value > this.validFrom;
+}, "Valid-until date must be after the valid-from date");
+
+// ─── Compound indexes ─────────────────────────────────────────────────────────
+// Coupon lookups almost always include code + one of these conditions,
+// so we index both common query shapes.
+couponSchema.index({ code: 1, isActive: 1 });
+couponSchema.index({ code: 1, deletedAt: 1 });
 
 module.exports = mongoose.model("Coupon", couponSchema);
