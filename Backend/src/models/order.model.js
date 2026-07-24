@@ -1,4 +1,12 @@
 const mongoose = require("mongoose");
+const {
+    ORDER_STATUSES,
+    PAYMENT_METHODS,
+    PAYMENT_STATUSES,
+    PAYMENT_GATEWAYS
+} = require("../constants/order.constants");
+const { ADDRESS_TYPES } = require("../constants/address.constants");
+const { DISCOUNT_TYPES } = require("../constants/coupon.constants");
 
 // ─────────────────────────────────────────────────────────────────────────────
 // WHY SNAPSHOTS?
@@ -27,6 +35,18 @@ const orderItemSchema = new mongoose.Schema(
             type: String,
             required: [true, "Product name snapshot is required"],
             trim: true
+        },
+
+        slug: {
+            type: String,
+            required: [true, "Product slug snapshot is required"],
+            trim: true
+        },
+
+        category: {
+            type: String,
+            trim: true,
+            default: ""
         },
 
         // Brand at time of purchase — useful for invoices and brand analytics
@@ -117,31 +137,58 @@ const shippingAddressSchema = new mongoose.Schema(
         city:         { type: String, required: true, trim: true },
         state:        { type: String, required: true, trim: true },
         country:      { type: String, required: true, trim: true, default: "India" },
-        postalCode:   { type: String, required: true, trim: true }
+        postalCode:   { type: String, required: true, trim: true },
+        addressType:  { type: String, enum: ADDRESS_TYPES, default: "Home" }
     },
     { _id: false } // it's a snapshot, not an independent document
 );
 
 // ─── Sub-schema: Payment information ─────────────────────────────────────────
-// Embedded for v1 — can be extracted into a separate collection later
-// when integrating Razorpay / Stripe webhooks.
 const paymentSchema = new mongoose.Schema(
     {
+        // Gateway: Cash (for COD), Razorpay, Stripe, etc.
+        gateway: {
+            type: String,
+            required: true,
+            enum: PAYMENT_GATEWAYS,
+            default: "Cash"
+        },
+
+        // Method: COD, Card, UPI, Net Banking, Wallet
         method: {
             type: String,
             required: true,
-            enum: ["COD", "Card", "UPI", "Net Banking", "Wallet"],
+            enum: PAYMENT_METHODS,
             default: "COD"
         },
 
         status: {
             type: String,
-            enum: ["Pending", "Paid", "Failed", "Refunded"],
+            required: true,
+            enum: PAYMENT_STATUSES,
             default: "Pending"
         },
 
-        // Payment gateway transaction ID — empty for COD until delivery
+        // Payment gateway transaction/order identifiers
         transactionId: {
+            type: String,
+            trim: true,
+            default: ""
+        },
+
+        gatewayOrderId: {
+            type: String,
+            trim: true,
+            default: ""
+        },
+
+        gatewayPaymentId: {
+            type: String,
+            trim: true,
+            default: ""
+        },
+
+        gatewaySignature: {
             type: String,
             trim: true,
             default: ""
@@ -151,20 +198,31 @@ const paymentSchema = new mongoose.Schema(
 );
 
 // ─── Sub-schema: Coupon applied to the order ──────────────────────────────────
-// Stored directly on the order so history stays intact even if the coupon
-// is deleted from the coupons collection later.
+// Preserves full details of how the discount was calculated at checkout time
 const couponSchema = new mongoose.Schema(
     {
-        couponCode: {
+        code: {
             type: String,
             trim: true,
             uppercase: true,
             default: ""
         },
 
-        discount: {
+        discountType: {
+            type: String,
+            enum: [...DISCOUNT_TYPES, ""],
+            default: ""
+        },
+
+        discountValue: {
             type: Number,
-            min: [0, "Discount cannot be negative"],
+            min: [0, "Discount value cannot be negative"],
+            default: 0
+        },
+
+        discountApplied: {
+            type: Number,
+            min: [0, "Discount applied cannot be negative"],
             default: 0
         }
     },
@@ -178,13 +236,62 @@ const statusHistorySchema = new mongoose.Schema(
     {
         status: {
             type: String,
-            required: true
+            required: true,
+            enum: ORDER_STATUSES
         },
 
         // When this status was applied
         changedAt: {
             type: Date,
             default: Date.now
+        },
+
+        // Who made the status change: "system", "customer", or admin user ID
+        changedBy: {
+            type: String,
+            trim: true,
+            default: "system"
+        }
+    },
+    { _id: false }
+);
+
+// ─── Sub-schema: Pricing breakdown ───────────────────────────────────────────
+const pricingSchema = new mongoose.Schema(
+    {
+        // Sum of all item subtotals before any deductions
+        subtotal: {
+            type: Number,
+            required: true,
+            min: [0, "Subtotal cannot be negative"]
+        },
+
+        // Amount saved via coupon or promotion
+        discount: {
+            type: Number,
+            default: 0,
+            min: [0, "Discount cannot be negative"]
+        },
+
+        // Delivery fee — 0 for free shipping
+        shippingFee: {
+            type: Number,
+            default: 0,
+            min: [0, "Shipping fee cannot be negative"]
+        },
+
+        // GST or other applicable tax
+        tax: {
+            type: Number,
+            default: 0,
+            min: [0, "Tax cannot be negative"]
+        },
+
+        // Final amount charged: subtotal - discount + shippingFee + tax
+        total: {
+            type: Number,
+            required: true,
+            min: [0, "Total cannot be negative"]
         }
     },
     { _id: false }
@@ -195,7 +302,6 @@ const orderSchema = new mongoose.Schema(
     {
         // Human-readable order identifier shown to the customer
         // Format: ORD-YYYYMMDD-XXXXXX  →  e.g. ORD-20260717-000123
-        // Generated in the controller before saving the order.
         orderNumber: {
             type: String,
             required: true,
@@ -227,64 +333,22 @@ const orderSchema = new mongoose.Schema(
             required: true
         },
 
-        // Payment details embedded for v1
+        // Pricing breakdown
+        pricing: {
+            type: pricingSchema,
+            required: true
+        },
+
+        // Payment details embedded
         payment: {
             type: paymentSchema,
             required: true
         },
 
-        // ─── Order totals (all stored, never recalculated) ─────────────────
-        // Prices change; we always want to show what the customer actually paid.
-
-        // Sum of all item subtotals before any deductions
-        subtotal: {
-            type: Number,
-            required: true,
-            min: [0, "Subtotal cannot be negative"]
-        },
-
-        // Amount saved via coupon or sale — 0 if no discount applied
-        discount: {
-            type: Number,
-            default: 0,
-            min: [0, "Discount cannot be negative"]
-        },
-
-        // Delivery fee — 0 for free shipping
-        shippingCharge: {
-            type: Number,
-            default: 0,
-            min: [0, "Shipping charge cannot be negative"]
-        },
-
-        // GST or other applicable tax
-        tax: {
-            type: Number,
-            default: 0,
-            min: [0, "Tax cannot be negative"]
-        },
-
-        // Final amount charged:  subtotal - discount + shippingCharge + tax
-        total: {
-            type: Number,
-            required: true,
-            min: [0, "Total cannot be negative"]
-        },
-
         // ─── Order lifecycle status ────────────────────────────────────────
         orderStatus: {
             type: String,
-            enum: [
-                "Pending",          // order placed, awaiting confirmation
-                "Confirmed",        // seller confirmed the order
-                "Packed",           // items packed and ready to ship
-                "Shipped",          // handed over to courier
-                "Out For Delivery", // with the delivery agent
-                "Delivered",        // successfully delivered
-                "Cancelled",        // cancelled before delivery
-                "Returned",         // customer initiated a return
-                "Refunded"          // refund processed
-            ],
+            enum: ORDER_STATUSES,
             default: "Pending"
         },
 
@@ -303,9 +367,22 @@ const orderSchema = new mongoose.Schema(
             default: []
         },
 
-        // ─── Delivery dates ────────────────────────────────────────────────
-        // Set by the controller when the corresponding status is applied.
+        // ─── Notes ─────────────────────────────────────────────────────────
+        customerNote: {
+            type: String,
+            trim: true,
+            default: "",
+            maxlength: [500, "Customer note cannot exceed 500 characters"]
+        },
 
+        adminNote: {
+            type: String,
+            trim: true,
+            default: "",
+            maxlength: [500, "Admin note cannot exceed 500 characters"]
+        },
+
+        // ─── Delivery dates ────────────────────────────────────────────────
         // Expected delivery date communicated to the customer at checkout
         estimatedDelivery: {
             type: Date,
@@ -323,9 +400,6 @@ const orderSchema = new mongoose.Schema(
             type: Date,
             default: null
         }
-
-        // ─── Return info (v2) ──────────────────────────────────────────────
-        // returnReason and returnStatus will be added when return flow is built.
     },
     {
         timestamps: true // createdAt = when the order was placed, updatedAt = last status change
