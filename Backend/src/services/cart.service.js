@@ -295,8 +295,9 @@ const removeCartItem = async (userId, itemId) => {
  * @param {string} userId - req.user._id from verifyJWT.
  * @returns {Promise<void>}
  */
-const clearCart = async (userId) => {
-    await Cart.updateOne({ user: userId }, { $set: { items: [] } });
+const clearCart = async (userId, session = null) => {
+    const options = session ? { session } : {};
+    await Cart.updateOne({ user: userId }, { $set: { items: [] } }, options);
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
