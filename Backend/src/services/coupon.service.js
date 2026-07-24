@@ -64,7 +64,7 @@ const getCouponOrThrow = async (id) => {
 const countUserUsage = (userId, code) =>
     Order.countDocuments({
         user: userId,
-        "coupon.couponCode": code,
+        "coupon.code": code,
         orderStatus: { $nin: NON_COUNTING_STATUSES }
     });
 
@@ -333,10 +333,12 @@ const validateCoupon = async (code, subtotal, userId) => {
  * @returns {Promise<void>}
  * @throws {ApiError} 404 if the coupon no longer exists or was deleted.
  */
-const incrementUsage = async (code) => {
+const incrementUsage = async (code, session = null) => {
+    const options = session ? { session } : {};
     const result = await Coupon.updateOne(
         { code, ...ALIVE },
-        { $inc: { usedCount: 1 } }
+        { $inc: { usedCount: 1 } },
+        options
     );
 
     if (result.modifiedCount === 0) {
