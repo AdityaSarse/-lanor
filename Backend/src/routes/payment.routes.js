@@ -16,10 +16,12 @@ const {
 // Payment Routes
 // ─────────────────────────────────────────────────────────────────────────────
 
-// NOTE: Webhook route MUST be public (called directly by Razorpay servers)
+// NOTE: Webhook route MUST receive unparsed raw body bytes (express.raw) for
+// accurate Razorpay HMAC SHA256 signature verification.
 // POST /api/v1/payments/webhook
 router.post(
     "/webhook",
+    express.raw({ type: "application/json" }),
     paymentController.handleWebhook
 );
 
