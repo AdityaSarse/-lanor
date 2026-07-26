@@ -1,16 +1,18 @@
-const Razorpay = require("razorpay");
+let razorpay;
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Razorpay Instance Configuration
-//
-// Single source of truth for Razorpay SDK initialization.
-// Key credentials are loaded from environment variables (.env).
-// The rest of the application imports this pre-configured instance.
-// ─────────────────────────────────────────────────────────────────────────────
-
-const razorpay = new Razorpay({
-    key_id:     process.env.RAZORPAY_KEY_ID     || "rzp_test_placeholder",
-    key_secret: process.env.RAZORPAY_KEY_SECRET || "placeholder_secret"
-});
+try {
+    const Razorpay = require("razorpay");
+    razorpay = new Razorpay({
+        key_id:     process.env.RAZORPAY_KEY_ID     || "rzp_test_placeholder",
+        key_secret: process.env.RAZORPAY_KEY_SECRET || "placeholder_secret"
+    });
+} catch (error) {
+    console.warn("[Razorpay Config] Warning: 'razorpay' package is not installed or failed to load. Please run 'npm install razorpay'.");
+    razorpay = {
+        orders: { create: async () => { throw new Error("Razorpay package is not installed. Please run 'npm install'."); } },
+        payments: { fetch: async () => { throw new Error("Razorpay package is not installed. Please run 'npm install'."); } },
+        refunds: { create: async () => { throw new Error("Razorpay package is not installed. Please run 'npm install'."); } }
+    };
+}
 
 module.exports = razorpay;
