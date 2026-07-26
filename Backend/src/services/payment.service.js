@@ -1,9 +1,10 @@
 const crypto   = require("crypto");
 const mongoose = require("mongoose");
 const razorpay = require("../config/razorpay");
-const Order    = require("../models/order.model");
-const Product  = require("../models/products.model");
-const ApiError = require("../utils/ApiError");
+const Order               = require("../models/order.model");
+const Product             = require("../models/products.model");
+const notificationService = require("./notification.service");
+const ApiError            = require("../utils/ApiError");
 const {
     PAYMENT_STATUS,
     RAZORPAY_WEBHOOK_EVENTS
@@ -272,8 +273,29 @@ const verifyPayment = async (paymentData, userId) => {
     } catch (error) {
         if (session) await session.abortTransaction();
         throw error;
-    } finally {
-        if (session) session.endSession();
+    }
+
+    // Trigger non-blocking Payment Success notification
+    if (order) {
+        Order.findById(order._id)
+            .populate({ path: "user", select: "fullName name email" })
+            .lean()
+            .then((populatedOrder) => {
+                if (populatedOrder) {
+                    notificationService
+                        .sendPaymentSuccessNotification(
+                            populatedOrder.user || { email: populatedOrder.shippingAddress?.email },
+                            populatedOrder,
+                            {
+                                razorpayPaymentId: razorpayPaymentId,
+                                amount: populatedOrder.pricing?.total || 0,
+                                gateway: "Razorpay"
+                            }
+                        )
+                        .catch((err) => console.error("[PaymentService] Failed to send payment receipt email:", err?.message || err));
+                }
+            })
+            .catch((err) => console.error("[PaymentService] Payment notification user lookup error:", err?.message || err));
     }
 
     return order;
@@ -347,8 +369,29 @@ const refundPayment = async (orderId, adminUserId, reason = "") => {
     } catch (error) {
         if (session) await session.abortTransaction();
         throw error;
-    } finally {
-        if (session) session.endSession();
+    }
+
+    // Trigger non-blocking Refund Processed notification
+    if (order) {
+        Order.findById(order._id)
+            .populate({ path: "user", select: "fullName name email" })
+            .lean()
+            .then((populatedOrder) => {
+                if (populatedOrder) {
+                    notificationService
+                        .sendRefundNotification(
+                            populatedOrder.user || { email: populatedOrder.shippingAddress?.email },
+                            populatedOrder,
+                            {
+                                refundId: populatedOrder.payment?.gatewayPaymentId || "N/A",
+                                amount: populatedOrder.pricing?.total || 0,
+                                reason: reason || "Admin Refund"
+                            }
+                        )
+                        .catch((err) => console.error("[PaymentService] Failed to send refund notification email:", err?.message || err));
+                }
+            })
+            .catch((err) => console.error("[PaymentService] Refund notification user lookup error:", err?.message || err));
     }
 
     return order;
@@ -407,6 +450,27 @@ const handleWebhook = async (signature, rawBody) => {
                     });
                 }
                 await order.save();
+
+                // Trigger non-blocking Payment Success notification for webhook payments
+                Order.findById(order._id)
+                    .populate({ path: "user", select: "fullName name email" })
+                    .lean()
+                    .then((populatedOrder) => {
+                        if (populatedOrder) {
+                            notificationService
+                                .sendPaymentSuccessNotification(
+                                    populatedOrder.user || { email: populatedOrder.shippingAddress?.email },
+                                    populatedOrder,
+                                    {
+                                        razorpayPaymentId: razorpayPaymentId,
+                                        amount: populatedOrder.pricing?.total || 0,
+                                        gateway: "Razorpay (Webhook)"
+                                    }
+                                )
+                                .catch((err) => console.error("[PaymentService Webhook] Failed to send payment receipt email:", err?.message || err));
+                        }
+                    })
+                    .catch((err) => console.error("[PaymentService Webhook] Payment notification user lookup error:", err?.message || err));
             }
         }
     }
