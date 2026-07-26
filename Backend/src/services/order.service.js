@@ -3,9 +3,10 @@ const Order    = require("../models/order.model");
 const Cart     = require("../models/cart.model");
 const Address  = require("../models/addresses.models");
 const Product  = require("../models/products.model");
-const couponService = require("./coupon.service");
-const cartService   = require("./cart.service");
-const ApiError      = require("../utils/ApiError");
+const couponService       = require("./coupon.service");
+const cartService         = require("./cart.service");
+const notificationService = require("./notification.service");
+const ApiError            = require("../utils/ApiError");
 const {
     ORDER_STATUSES,
     PAYMENT_METHODS
@@ -416,7 +417,24 @@ const createOrder = async (userId, data) => {
             throw error;
         } finally {
             if (session) session.endSession();
-        }
+    }
+
+    // Trigger non-blocking Order Placed email notification
+    if (order) {
+        Order.findById(order._id)
+            .populate({ path: "user", select: "fullName name email" })
+            .lean()
+            .then((populatedOrder) => {
+                if (populatedOrder) {
+                    notificationService
+                        .sendOrderPlacedNotification(
+                            populatedOrder.user || { email: populatedOrder.shippingAddress?.email },
+                            populatedOrder
+                        )
+                        .catch((err) => console.error("[OrderService] Failed to send order confirmation email:", err?.message || err));
+                }
+            })
+            .catch((err) => console.error("[OrderService] Notification user lookup error:", err?.message || err));
     }
 
     return order;
@@ -575,6 +593,32 @@ const updateOrderStatus = async (orderId, newStatus, adminNote = "", adminUserId
     }
 
     await order.save();
+
+    // Trigger non-blocking status notifications
+    if (newStatus === "Shipped" || newStatus === "Delivered") {
+        Order.findById(order._id)
+            .populate({ path: "user", select: "fullName name email" })
+            .lean()
+            .then((populatedOrder) => {
+                if (!populatedOrder) return;
+                const userObj = populatedOrder.user || { email: populatedOrder.shippingAddress?.email };
+
+                if (newStatus === "Shipped") {
+                    notificationService
+                        .sendOrderShippedNotification(userObj, populatedOrder, {
+                            carrier: "Standard Express",
+                            trackingNumber: populatedOrder.trackingNumber || "N/A"
+                        })
+                        .catch((err) => console.error("[OrderService] Failed to send order shipped email:", err?.message || err));
+                } else if (newStatus === "Delivered") {
+                    notificationService
+                        .sendOrderDeliveredNotification(userObj, populatedOrder)
+                        .catch((err) => console.error("[OrderService] Failed to send order delivered email:", err?.message || err));
+                }
+            })
+            .catch((err) => console.error("[OrderService] Status notification user lookup error:", err?.message || err));
+    }
+
     return order;
 };
 
