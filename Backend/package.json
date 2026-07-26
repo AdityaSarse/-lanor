@@ -17,6 +17,8 @@
     "express": "^5.2.1",
     "express-validator": "^7.3.2",
     "jsonwebtoken": "^9.0.3",
-    "mongoose": "^9.7.4"
+    "mongoose": "^9.7.4",
+    "nodemailer": "^6.9.16",
+    "razorpay": "^2.9.5"
   }
 }
