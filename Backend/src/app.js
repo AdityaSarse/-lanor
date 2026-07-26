@@ -9,9 +9,10 @@ const wishlistRouter = require("./routes/wishlist.routes");
 const cartRouter     = require("./routes/cart.routes");
 const addressRouter  = require("./routes/address.routes");
 const couponRouter   = require("./routes/coupon.routes");
-const orderRouter    = require("./routes/order.routes");
-const paymentRouter  = require("./routes/payment.routes");
-const errorHandler   = require("./middelwares/error.middleware");
+const orderRouter        = require("./routes/order.routes");
+const paymentRouter      = require("./routes/payment.routes");
+const notificationRouter = require("./routes/notification.routes");
+const errorHandler       = require("./middelwares/error.middleware");
 
 const app = express();
 
@@ -19,17 +20,18 @@ app.use(express.json());
 app.use(cookieParser());
 
 // ── Routes ────────────────────────────────────────────────────────────────────
-app.use("/api/v1/auth",       authRouter);
-app.use("/api/v1/products",   productRouter);
-app.use("/api/v1/categories", categoryRouter);
-app.use("/api/v1/brands",     brandRouter);
-app.use("/api/v1/reviews",    reviewRouter);
-app.use("/api/v1/wishlist",   wishlistRouter);
-app.use("/api/v1/cart",       cartRouter);
-app.use("/api/v1/address",    addressRouter);
-app.use("/api/v1/coupons",    couponRouter);
-app.use("/api/v1/orders",     orderRouter);
-app.use("/api/v1/payments",   paymentRouter);
+app.use("/api/v1/auth",          authRouter);
+app.use("/api/v1/products",      productRouter);
+app.use("/api/v1/categories",    categoryRouter);
+app.use("/api/v1/brands",        brandRouter);
+app.use("/api/v1/reviews",       reviewRouter);
+app.use("/api/v1/wishlist",      wishlistRouter);
+app.use("/api/v1/cart",          cartRouter);
+app.use("/api/v1/address",       addressRouter);
+app.use("/api/v1/coupons",       couponRouter);
+app.use("/api/v1/orders",        orderRouter);
+app.use("/api/v1/payments",      paymentRouter);
+app.use("/api/v1/notifications", notificationRouter);
 
 // ── Global Error Handler ──────────────────────────────────────────────────────
 // Must be registered AFTER all routes — Express uses the 4-arg signature to
