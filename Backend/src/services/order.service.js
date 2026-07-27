@@ -417,6 +417,7 @@ const createOrder = async (userId, data) => {
             throw error;
         } finally {
             if (session) session.endSession();
+        }
     }
 
     // Trigger non-blocking Order Placed email notification
