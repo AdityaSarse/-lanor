@@ -2,9 +2,10 @@ let razorpay;
 
 try {
     const Razorpay = require("razorpay");
+    const sanitize = (val) => (val ? val.trim().replace(/^["']|["']$/g, '') : "");
     razorpay = new Razorpay({
-        key_id:     process.env.RAZORPAY_KEY_ID     || "rzp_test_placeholder",
-        key_secret: process.env.RAZORPAY_KEY_SECRET || "placeholder_secret"
+        key_id:     sanitize(process.env.RAZORPAY_KEY_ID)     || "rzp_test_placeholder",
+        key_secret: sanitize(process.env.RAZORPAY_KEY_SECRET) || "placeholder_secret"
     });
 } catch (error) {
     console.warn("[Razorpay Config] Warning: 'razorpay' package is not installed or failed to load. Please run 'npm install razorpay'.");
