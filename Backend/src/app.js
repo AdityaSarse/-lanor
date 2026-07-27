@@ -12,6 +12,7 @@ const couponRouter   = require("./routes/coupon.routes");
 const orderRouter        = require("./routes/order.routes");
 const paymentRouter      = require("./routes/payment.routes");
 const notificationRouter = require("./routes/notification.routes");
+const uploadRouter       = require("./routes/upload.routes");
 const errorHandler       = require("./middelwares/error.middleware");
 
 const app = express();
@@ -32,6 +33,7 @@ app.use("/api/v1/coupons",       couponRouter);
 app.use("/api/v1/orders",        orderRouter);
 app.use("/api/v1/payments",      paymentRouter);
 app.use("/api/v1/notifications", notificationRouter);
+app.use("/api/v1/upload",        uploadRouter);
 
 // ── Global Error Handler ──────────────────────────────────────────────────────
 // Must be registered AFTER all routes — Express uses the 4-arg signature to
