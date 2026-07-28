@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { ProductCard } from "../../components/customer/ProductCard";
 import { productService } from "../../services/api.service";
+import linenSectionImg from "../../assets/LinenSection.png";
 
 /* ─── Hero slides data ──────────────────────────────────────────────── */
 const HERO_SLIDES = [
@@ -334,59 +335,49 @@ export const HomePage = () => {
       )}
 
       {/* ══════════════════════════════════════════════════════════════
-          6. DENIM FOREVER EDITORIAL (split layout)
+          6. EFFORTLESS ELEGANCE EDITORIAL (Matching Vionellae exact layout)
       ══════════════════════════════════════════════════════════════ */}
-      <section className="relative overflow-hidden bg-gray-950">
-        <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[500px]">
-          {/* Images grid */}
-          <div className="grid grid-cols-2 gap-1">
+      <section className="relative bg-white py-12 lg:py-16 overflow-hidden">
+        <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8">
+          {/* Main composite image section with vertical running text overlay */}
+          <div className="relative w-full overflow-hidden">
             <img
-              src="https://images.unsplash.com/photo-1617137984095-74e4e5e3613f?auto=format&fit=crop&q=80&w=600"
-              alt="Denim editorial 1"
-              className="h-full w-full object-cover object-center"
+              src={linenSectionImg}
+              alt="Effortless Elegance Linen Collection"
+              className="w-full h-auto object-cover select-none"
             />
-            <div className="grid grid-rows-2 gap-1">
-              <img
-                src="https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?auto=format&fit=crop&q=80&w=600"
-                alt="Denim editorial 2"
-                className="h-full w-full object-cover object-center"
-              />
-              <img
-                src="https://images.unsplash.com/photo-1503341504253-dff4815485f1?auto=format&fit=crop&q=80&w=600"
-                alt="Denim editorial 3"
-                className="h-full w-full object-cover object-center"
-              />
+
+            {/* Vertical running text placed inside the image height in the center white gap */}
+            <div className="absolute inset-y-0 left-[41.2%] w-[4%] hidden md:flex items-center justify-center pointer-events-none z-10 py-6">
+              <span
+                className="font-serif text-sm sm:text-base md:text-lg lg:text-[21px] font-extrabold uppercase tracking-[0.16em] text-[#0d2137] whitespace-nowrap leading-none"
+                style={{ writingMode: "vertical-rl", textOrientation: "mixed" }}
+              >
+                EFFORTLESS ELEGANCE
+              </span>
             </div>
           </div>
 
-          {/* Text */}
+          {/* Editorial summary & CTA button below */}
           <motion.div
-            initial={{ opacity: 0, x: 30 }}
-            whileInView={{ opacity: 1, x: 0 }}
+            initial={{ opacity: 0, y: 18 }}
+            whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="flex flex-col items-start justify-center px-10 py-16 lg:px-16"
+            transition={{ duration: 0.5 }}
+            className="mt-10 flex flex-col items-center text-center max-w-2xl mx-auto px-4"
           >
-            <div
-              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 hidden lg:block select-none pointer-events-none"
-              style={{ writingMode: "vertical-rl", textOrientation: "mixed" }}
-            >
-              <span className="text-[80px] font-black tracking-tighter text-white/10 uppercase leading-none">
-                DENIM FOREVER
-              </span>
-            </div>
-            <span className="mb-4 text-[11px] font-bold uppercase tracking-[0.2em] text-gray-400">
+            <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-[#4a6d98] mb-2">
               MEN'S COLLECTION
             </span>
-            <p className="font-logo text-4xl italic text-white leading-snug sm:text-5xl mb-2">
-              Denim Forever
-            </p>
-            <p className="text-sm text-gray-400 leading-relaxed max-w-sm mt-2">
-              Crafted with heritage, designed for the modern world — where timeless quality meets everyday comfort.
+            <h3 className="font-logo text-4xl sm:text-5xl italic font-medium text-gray-900 mb-3">
+              Effortless Elegance
+            </h3>
+            <p className="text-sm text-gray-600 leading-relaxed font-light tracking-wide max-w-lg">
+              Crafted from 100% pure European linen, designed for modern sophistication — where relaxed luxury meets everyday comfort.
             </p>
             <Link
               to="/products?gender=Men"
-              className="mt-8 inline-block bg-white px-10 py-2.5 text-[12px] font-bold uppercase tracking-[0.18em] text-[#0d2137] hover:bg-gray-200 transition-colors"
+              className="mt-6 inline-block bg-[#0d2137] px-10 py-3 text-[12px] font-bold uppercase tracking-[0.18em] text-white hover:bg-[#1a3a5c] transition-colors shadow-sm"
             >
               MEN
             </Link>
