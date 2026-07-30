@@ -11,6 +11,9 @@ import { useCartStore } from "../../store/useCartStore";
 /* ─────────────────────────────────────────
    NAVIGATION MENU DATA  (from SectionImages)
 ───────────────────────────────────────── */
+/* ─────────────────────────────────────────
+   NAVIGATION MENU DATA  (from SectionImages)
+───────────────────────────────────────── */
 const NAV_MENUS = [
   {
     label: "NEW",
@@ -20,10 +23,14 @@ const NAV_MENUS = [
         title: "NEW WOMEN'S",
         href: "/products?gender=Women&sort=newest",
         items: [
-          { label: "TOPS",      href: "/products?gender=Women&category=tops&sort=newest" },
-          { label: "DRESSES",   href: "/products?gender=Women&category=dresses&sort=newest" },
-          { label: "BOTTOMS",   href: "/products?gender=Women&category=bottoms&sort=newest" },
-          { label: "BODYSUITS", href: "/products?gender=Women&category=bodysuits&sort=newest" },
+          { label: "TOPS",          href: "/products?gender=Women&category=tops&sort=newest" },
+          { label: "DRESSES",       href: "/products?gender=Women&category=dresses&sort=newest" },
+          { label: "BOTTOMS",       href: "/products?gender=Women&category=bottoms&sort=newest" },
+          { label: "BODYSUITS",     href: "/products?gender=Women&category=bodysuits&sort=newest" },
+          { label: "JUMPSUITS",     href: "/products?gender=Women&category=jumpsuits&sort=newest" },
+          { label: "LINGERIE SETS", href: "/products?gender=Women&category=lingerie&sort=newest" },
+          { label: "BRAS",          href: "/products?gender=Women&category=bras&sort=newest" },
+          { label: "PANTIES",       href: "/products?gender=Women&category=panties&sort=newest" },
         ],
       },
       {
@@ -199,82 +206,93 @@ const NAV_MENUS = [
 ];
 
 /* ─────────────────────────────────────────
-   MEGA MENU DROPDOWN
+   MULTI-LEVEL FLYOUT MENU (Vionellae 2-level flyout style)
 ───────────────────────────────────────── */
-const MegaMenu = ({ menu, onClose }) => {
+const FlyoutMenu = ({ menu, onClose, onKeep }) => {
   const [activeCol, setActiveCol] = useState(0);
+
   if (!menu.columns?.length) return null;
+
+  const currentColumn = menu.columns[activeCol] || menu.columns[0];
+  const hasSubItems = currentColumn?.items && currentColumn.items.length > 0;
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: -4 }}
+      initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -4 }}
-      transition={{ duration: 0.15, ease: "easeOut" }}
-      className="absolute left-1/2 -translate-x-1/2 top-full z-50 mt-0 min-w-[520px] bg-white shadow-2xl border border-gray-100"
+      exit={{ opacity: 0, y: 4 }}
+      transition={{ duration: 0.16, ease: "easeOut" }}
+      className="absolute left-0 top-full z-50 flex bg-white shadow-xl border border-gray-200/80 rounded-sm text-gray-800 select-none min-w-[190px]"
+      onMouseEnter={onKeep}
       onMouseLeave={onClose}
+      role="menu"
     >
-      <div className="flex">
-        {/* Left column: section titles */}
-        <div className="w-52 border-r border-gray-100 py-4 shrink-0">
-          {menu.columns.map((col, i) => (
-            <div key={i}>
-              {col.title ? (
-                <button
-                  onMouseEnter={() => setActiveCol(i)}
-                  className={`flex w-full items-center justify-between px-6 py-2.5 text-[12px] tracking-wide text-left transition-colors cursor-pointer ${
-                    activeCol === i
-                      ? "font-bold text-gray-900"
-                      : "font-normal text-gray-600 hover:text-gray-900"
-                  }`}
-                >
-                  {col.title}
-                  {col.items.length > 0 && (
-                    <ChevronRight className="h-3 w-3 text-gray-400" />
-                  )}
-                </button>
-              ) : (
-                /* No title — flat list of items directly */
-                col.items.map((item) => (
-                  <Link
-                    key={item.label}
-                    to={item.href}
-                    onClick={onClose}
-                    className="block px-6 py-2.5 text-[12px] tracking-wide text-gray-600 hover:text-gray-900 hover:font-semibold transition-colors"
-                  >
-                    {item.label}
-                  </Link>
-                ))
-              )}
-            </div>
-          ))}
-        </div>
+      {/* ── Left Level 1 Categories ── */}
+      <div className="w-[195px] border-r border-gray-100 py-2 shrink-0 bg-white">
+        {menu.columns.map((col, i) => {
+          if (!col.title) {
+            // Flat list item if no section title
+            return col.items.map((item) => (
+              <Link
+                key={item.label}
+                to={item.href}
+                onClick={onClose}
+                className="block px-4 py-2.5 text-[12px] font-normal tracking-wider uppercase text-gray-700 hover:text-gray-900 hover:bg-gray-50 transition-colors"
+                role="menuitem"
+              >
+                {item.label}
+              </Link>
+            ));
+          }
 
-        {/* Right column: sub-items of active section */}
-        <AnimatePresence mode="wait">
-          {menu.columns[activeCol]?.items?.length > 0 && (
-            <motion.div
-              key={activeCol}
-              initial={{ opacity: 0, x: 6 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.12 }}
-              className="py-4 px-6 min-w-[180px]"
-            >
-              {menu.columns[activeCol].items.map((item) => (
-                <Link
-                  key={item.label}
-                  to={item.href}
-                  onClick={onClose}
-                  className="block py-2 text-[12px] tracking-wide text-gray-600 hover:text-gray-900 hover:font-semibold transition-colors whitespace-nowrap"
-                >
-                  {item.label}
-                </Link>
-              ))}
-            </motion.div>
-          )}
-        </AnimatePresence>
+          const isActive = activeCol === i;
+          return (
+            <div key={i} onMouseEnter={() => setActiveCol(i)}>
+              <Link
+                to={col.href || "#"}
+                onClick={onClose}
+                className={`flex items-center justify-between px-4 py-2.5 text-[12px] font-medium tracking-wider uppercase transition-colors cursor-pointer ${
+                  isActive
+                    ? "text-gray-900 font-semibold bg-gray-50/90"
+                    : "text-gray-700 hover:text-gray-900 hover:bg-gray-50/50"
+                }`}
+                role="menuitem"
+              >
+                <span>{col.title}</span>
+                {col.items?.length > 0 && (
+                  <ChevronRight className="h-3.5 w-3.5 text-gray-400" />
+                )}
+              </Link>
+            </div>
+          );
+        })}
       </div>
+
+      {/* ── Right Level 2 Subcategories Flyout ── */}
+      <AnimatePresence mode="wait">
+        {hasSubItems && (
+          <motion.div
+            key={activeCol}
+            initial={{ opacity: 0, x: 4 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.12 }}
+            className="w-[215px] py-2 bg-white shrink-0"
+          >
+            {currentColumn.items.map((item) => (
+              <Link
+                key={item.label}
+                to={item.href}
+                onClick={onClose}
+                className="block px-4 py-2.5 text-[12px] font-normal tracking-wider uppercase text-gray-700 hover:text-gray-900 hover:bg-gray-50 transition-colors whitespace-nowrap"
+                role="menuitem"
+              >
+                {item.label}
+              </Link>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 };
@@ -424,16 +442,16 @@ export const Navbar = () => {
   return (
     <>
       <header className={`sticky top-0 z-50 w-full bg-white transition-shadow duration-300 ${scrolled ? "shadow-md" : ""}`}>
-        {/* ── Promo Bar ── */}
-        <div className="bg-[#4a6d98] py-2 text-center">
-          <p className="text-[11px] font-semibold tracking-[0.18em] text-white uppercase">
+        {/* ── Promo Bar (Vionellae style — dark navy with gold accents) ── */}
+        <div className="bg-[#0d2137] py-2.5 text-center">
+          <p className="text-[11px] font-semibold tracking-[0.22em] text-[#c9a84c] uppercase">
             10% OFF / USE CODE: NEW10
           </p>
         </div>
 
         {/* ── Main Header Row ── */}
-        <div className="border-b border-gray-200">
-          <div className="mx-auto flex h-16 max-w-[1400px] items-center justify-between px-4 sm:px-6 lg:px-8">
+        <div className="border-b border-gray-100">
+          <div className="mx-auto flex h-[72px] max-w-[1400px] items-center justify-between px-4 sm:px-6 lg:px-10">
             {/* Mobile menu trigger */}
             <button
               className="lg:hidden p-1.5 text-gray-600 hover:text-gray-900"
@@ -442,20 +460,20 @@ export const Navbar = () => {
               <Menu className="h-5 w-5" />
             </button>
 
-            {/* Left: Currency / Language */}
-            <div className="hidden lg:flex items-center gap-4">
-              <span className="flex items-center gap-1 text-[11px] font-medium text-gray-500 cursor-pointer hover:text-gray-800 transition-colors">
-                🇺🇸 <span>USD</span>
+            {/* Left: Currency / Language (Vionellae style) */}
+            <div className="hidden lg:flex items-center gap-3">
+              <span className="flex items-center gap-1.5 text-[11px] font-medium text-gray-500 cursor-pointer hover:text-gray-900 transition-colors">
+                🇺🇸 <span className="tracking-wide">USD</span> <ChevronDown className="h-2.5 w-2.5" />
               </span>
-              <span className="text-gray-300">|</span>
-              <span className="flex items-center gap-0.5 text-[11px] font-medium text-gray-500 cursor-pointer hover:text-gray-800 transition-colors">
-                English <ChevronDown className="h-3 w-3" />
+              <span className="text-gray-200 text-xs">|</span>
+              <span className="flex items-center gap-1 text-[11px] font-medium text-gray-500 cursor-pointer hover:text-gray-900 transition-colors">
+                English <ChevronDown className="h-2.5 w-2.5" />
               </span>
             </div>
 
-            {/* Center: Logo */}
+            {/* Center: Logo (Vionellae script style) */}
             <Link to="/" className="absolute left-1/2 -translate-x-1/2">
-              <span className="font-logo text-3xl italic font-medium tracking-wide text-gray-900 hover:text-[#0d2137] transition-colors select-none">
+              <span className="font-logo text-[32px] italic font-semibold tracking-wide text-[#0d2137] hover:text-gray-700 transition-colors select-none">
                 Élanor
               </span>
             </Link>
@@ -515,9 +533,9 @@ export const Navbar = () => {
           </div>
         </div>
 
-        {/* ── Mega-Menu Nav Row (desktop) ── */}
-        <div className="hidden lg:block border-b border-gray-200 bg-white">
-          <nav className="mx-auto flex max-w-[1400px] items-center justify-center px-4">
+        {/* ── Desktop Navigation Row with Multi-level Flyout ── */}
+        <div className="hidden lg:block border-b border-gray-100 bg-white">
+          <nav className="mx-auto flex max-w-[1400px] items-center justify-center px-4 gap-0.5" role="navigation" aria-label="Main Navigation">
             {NAV_MENUS.map((menu) => (
               <div
                 key={menu.label}
@@ -527,23 +545,31 @@ export const Navbar = () => {
               >
                 <Link
                   to={menu.href}
-                  className={`flex items-center gap-0.5 px-3.5 py-3 text-[12px] font-medium tracking-[0.08em] transition-colors ${
+                  aria-expanded={activeMenu === menu.label}
+                  aria-haspopup={menu.columns?.length > 0}
+                  className={`relative flex items-center gap-1 px-4 py-3.5 text-[12px] font-medium tracking-[0.1em] transition-colors ${
                     activeMenu === menu.label
-                      ? "text-[#0d2137] font-semibold underline underline-offset-4"
-                      : "text-gray-700 hover:text-[#0d2137]"
+                      ? "text-[#0d2137] font-semibold"
+                      : "text-gray-600 hover:text-[#0d2137]"
                   }`}
                 >
                   {menu.label}
                   {menu.columns?.length > 0 && (
                     <ChevronDown className={`h-3 w-3 text-gray-400 transition-transform duration-200 ${activeMenu === menu.label ? "rotate-180" : ""}`} />
                   )}
+                  {/* Animated underline indicator */}
+                  <span className={`absolute bottom-0 left-4 right-4 h-[2px] bg-[#0d2137] transition-transform duration-300 origin-left ${
+                    activeMenu === menu.label ? "scale-x-100" : "scale-x-0"
+                  }`} />
                 </Link>
 
                 <AnimatePresence>
                   {activeMenu === menu.label && menu.columns?.length > 0 && (
-                    <div onMouseEnter={keepMenu} onMouseLeave={closeMenu}>
-                      <MegaMenu menu={menu} onClose={() => setActiveMenu(null)} />
-                    </div>
+                    <FlyoutMenu
+                      menu={menu}
+                      onClose={() => setActiveMenu(null)}
+                      onKeep={keepMenu}
+                    />
                   )}
                 </AnimatePresence>
               </div>
