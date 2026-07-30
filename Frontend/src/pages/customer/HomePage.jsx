@@ -1,44 +1,13 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import { ProductCard } from "../../components/customer/ProductCard";
 import { productService } from "../../services/api.service";
 import linenSectionImg from "../../assets/LinenSection.png";
-
-/* ─── Hero slides data ──────────────────────────────────────────────── */
-const HERO_SLIDES = [
-  {
-    id: 1,
-    image: "https://images.unsplash.com/photo-1581338834647-b0fb40704e21?auto=format&fit=crop&q=85&w=1920",
-    tag: "WOMEN'S COLLECTION",
-    headline1: "Forever in Style",
-    headline2: "ÉLANOR.",
-    sub: "The New Classic",
-    cta: "WOMEN",
-    ctaHref: "/products?gender=Women",
-  },
-  {
-    id: 2,
-    image: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&q=85&w=1920",
-    tag: "MEN'S COLLECTION",
-    headline1: "Crafted With Heritage",
-    headline2: "DENIM.",
-    sub: "Designed for the Modern World",
-    cta: "MEN",
-    ctaHref: "/products?gender=Men",
-  },
-  {
-    id: 3,
-    image: "https://images.unsplash.com/photo-1469334031218-e382a71b716b?auto=format&fit=crop&q=85&w=1920",
-    tag: "NEW ARRIVALS 2026",
-    headline1: "Everyday Elegance",
-    headline2: "STYLE.",
-    sub: "Shop the Latest Edits",
-    cta: "SHOP NOW",
-    ctaHref: "/products",
-  },
-];
+import heroImg from "../../assets/HEROIMAGE.png";
+import img1st from "../../assets/1st.png";
+import img2nd from "../../assets/2nd.png";
+import bgHero2 from "../../assets/BackgroundHero2.png";
 
 /* ─── Editorial "Shop the Edits" image pairs ──────────────────────── */
 const EDITS = [
@@ -133,26 +102,11 @@ const ProductSkeleton = () => (
    HOME PAGE
 ════════════════════════════════════════════════════════════════════════ */
 export const HomePage = () => {
-  const [heroIdx, setHeroIdx] = useState(0);
   const [womenNew, setWomenNew] = useState([]);
   const [womenSale, setWomenSale] = useState([]);
   const [menSale, setMenSale] = useState([]);
   const [menNew, setMenNew] = useState([]);
   const [loading, setLoading] = useState(true);
-  const intervalRef = useRef(null);
-
-  /* Auto-advance hero */
-  useEffect(() => {
-    intervalRef.current = setInterval(() => {
-      setHeroIdx((i) => (i + 1) % HERO_SLIDES.length);
-    }, 5000);
-    return () => clearInterval(intervalRef.current);
-  }, []);
-
-  const goHero = (dir) => {
-    clearInterval(intervalRef.current);
-    setHeroIdx((i) => (i + dir + HERO_SLIDES.length) % HERO_SLIDES.length);
-  };
 
   /* Fetch products */
   useEffect(() => {
@@ -178,85 +132,62 @@ export const HomePage = () => {
     fetchAll();
   }, []);
 
-  const slide = HERO_SLIDES[heroIdx];
-
   return (
     <div className="bg-white">
       {/* ══════════════════════════════════════════════════════════════
-          1. HERO SLIDER
+          1. HERO IMAGE — Full-width editorial (Vionellae style)
       ══════════════════════════════════════════════════════════════ */}
-      <section className="relative h-[82vh] min-h-[560px] w-full overflow-hidden bg-gray-200 select-none">
-        <AnimatePresence mode="sync">
-          <motion.img
-            key={slide.id}
-            src={slide.image}
-            alt={slide.headline2}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.7 }}
-            className="absolute inset-0 h-full w-full object-cover object-center"
-          />
-        </AnimatePresence>
+      <section
+        className="relative h-[80vh] min-h-[520px] overflow-hidden select-none"
+        style={{
+          width: '100vw',
+          marginLeft: 'calc(-50vw + 50%)',
+        }}
+      >
+        {/* Animated background with Ken Burns slow zoom */}
+        <motion.div
+          initial={{ scale: 1.08, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 1.8, ease: "easeOut" }}
+          className="absolute inset-0"
+          style={{
+            backgroundImage: `url(${heroImg})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
+          }}
+        />
 
-        {/* Overlay gradient */}
-        <div className="absolute inset-0 bg-gradient-to-r from-black/45 via-black/20 to-transparent" />
+        {/* Subtle shimmer sweep overlay — plays once on load */}
+        <motion.div
+          initial={{ x: '-100%' }}
+          animate={{ x: '200%' }}
+          transition={{ duration: 2, delay: 0.8, ease: 'easeInOut' }}
+          className="absolute inset-0 pointer-events-none z-10"
+          style={{
+            background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.15) 50%, transparent 60%)',
+          }}
+        />
 
-        {/* Text content */}
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={`text-${slide.id}`}
-            initial={{ opacity: 0, y: 18 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -12 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="absolute inset-0 flex flex-col items-start justify-center pl-10 sm:pl-16 lg:pl-24 pb-10"
+        {/* Very subtle gradient vignette at edges */}
+        <div className="absolute inset-0 pointer-events-none" style={{
+          background: 'linear-gradient(to right, rgba(0,0,0,0.04) 0%, transparent 15%, transparent 85%, rgba(0,0,0,0.04) 100%)',
+        }} />
+
+        {/* CTA button overlay — positioned below "The New Blue." text (Vionellae style) */}
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 1.0, ease: "easeOut" }}
+          className="absolute top-[56%] left-[63%] -translate-x-1/2 z-20"
+        >
+          <Link
+            to="/products?gender=Women"
+            className="group inline-block bg-[#0d2137] px-12 py-3 text-[14px] sm:text-[15px] font-bold uppercase tracking-[0.18em] text-white hover:bg-[#1a3a5c] transition-all duration-300 hover:shadow-[0_4px_20px_rgba(13,33,55,0.4)]"
           >
-            <span className="mb-3 text-[11px] font-bold uppercase tracking-[0.25em] text-white/80">
-              {slide.tag}
-            </span>
-            <p className="font-logo text-4xl italic font-medium text-white leading-tight sm:text-5xl">
-              {slide.headline1}
-            </p>
-            <h1 className="text-6xl font-black tracking-tight text-white sm:text-8xl leading-none uppercase">
-              {slide.headline2}
-            </h1>
-            <p className="mt-2 text-sm font-light text-white/80 tracking-wider">
-              {slide.sub}
-            </p>
-            <Link
-              to={slide.ctaHref}
-              className="mt-7 inline-block bg-[#0d2137] px-8 py-2.5 text-[12px] font-bold uppercase tracking-[0.15em] text-white hover:bg-[#1a3a5c] transition-colors"
-            >
-              {slide.cta}
-            </Link>
-          </motion.div>
-        </AnimatePresence>
-
-        {/* Nav arrows */}
-        <button
-          onClick={() => goHero(-1)}
-          className="absolute left-4 top-1/2 -translate-y-1/2 flex h-9 w-9 items-center justify-center bg-white/20 text-white backdrop-blur-sm hover:bg-white/40 transition-colors cursor-pointer"
-        >
-          <ChevronLeft className="h-5 w-5" />
-        </button>
-        <button
-          onClick={() => goHero(1)}
-          className="absolute right-4 top-1/2 -translate-y-1/2 flex h-9 w-9 items-center justify-center bg-white/20 text-white backdrop-blur-sm hover:bg-white/40 transition-colors cursor-pointer"
-        >
-          <ChevronRight className="h-5 w-5" />
-        </button>
-
-        {/* Dots */}
-        <div className="absolute bottom-5 left-1/2 -translate-x-1/2 flex gap-2">
-          {HERO_SLIDES.map((_, i) => (
-            <button
-              key={i}
-              onClick={() => setHeroIdx(i)}
-              className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${i === heroIdx ? "w-6 bg-white" : "w-2 bg-white/50"}`}
-            />
-          ))}
-        </div>
+            WOMEN
+          </Link>
+        </motion.div>
       </section>
 
       {/* ══════════════════════════════════════════════════════════════
@@ -271,6 +202,74 @@ export const HomePage = () => {
           ))}
         </div>
       </div>
+
+      {/* ══════════════════════════════════════════════════════════════
+          3. TRENDING DENIM DESTINATION (Single unified background banner)
+      ══════════════════════════════════════════════════════════════ */}
+      <section className="relative bg-[#f7f7f7] py-8 lg:py-12 overflow-hidden select-none">
+        <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-10">
+          {/* SINGLE continuous background container with BackgroundHero2.png */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="relative w-full overflow-hidden bg-cover bg-center shadow-xl rounded-sm min-h-[300px] sm:min-h-[340px] lg:min-h-[380px] flex flex-col md:flex-row items-stretch"
+            style={{ backgroundImage: `url(${bgHero2})` }}
+          >
+            {/* Left side: 1st.png */}
+            <div className="w-full md:w-[52%] relative flex items-end justify-start p-0 overflow-hidden min-h-[300px] lg:min-h-[380px]">
+              <img
+                src={img1st}
+                alt="Standing Model — Denim Dress"
+                className="w-full h-[92%] object-cover object-bottom ml-2 sm:ml-4 lg:ml-6 mb-4 sm:mb-6 lg:mb-8 select-none transition-transform duration-500"
+              />
+            </div>
+
+            {/* Right side: Typography & 2nd.png */}
+            <div className="w-full md:w-1/2 relative flex flex-col justify-between p-6 sm:p-8 lg:p-10">
+              {/* Top Typography: TRENDING DENIM DESTINATION STYLE */}
+              <div className="relative z-10 text-left pt-2">
+                <span className="block text-xs sm:text-sm font-semibold uppercase tracking-[0.22em] text-[#0d2137]">
+                  TRENDING • TIMELESS
+                </span>
+                <div className="relative mt-1">
+                  <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl lg:text-[56px] font-black uppercase tracking-tight text-[#0d2137] leading-[0.95]">
+                    DENIM DESTINATION
+                  </h2>
+                  <div className="flex justify-end -mt-1 sm:-mt-2 mr-4 lg:mr-8">
+                    <span className="font-serif italic text-2xl sm:text-3xl text-[#0d2137] font-semibold tracking-wide">
+                      STYLE
+                    </span>
+                  </div>
+                </div>
+                <p className="mt-2 text-xs sm:text-sm text-gray-600 font-light tracking-wide italic">
+                  Crafted for the modern wardrobe.
+                </p>
+              </div>
+
+              {/* Sitting Model (2nd.png) */}
+              <div className="relative flex-1 flex items-end justify-center mt-2 overflow-hidden">
+                <img
+                  src={img2nd}
+                  alt="Sitting Model — Denim Skirt"
+                  className="w-auto h-[88%] sm:h-[92%] max-h-none scale-105 sm:scale-110 lg:scale-110 object-contain object-bottom mr-8 sm:mr-12 lg:mr-16 mb-4 sm:mb-6 lg:mb-8 select-none transition-transform duration-500"
+                />
+              </div>
+
+              {/* Bottom CTA Button */}
+              <div className="mt-4 pt-2 z-10 flex justify-center md:justify-start">
+                <Link
+                  to="/products?category=denim"
+                  className="inline-block bg-[#0d2137] px-8 py-3 text-[12px] font-bold uppercase tracking-[0.18em] text-white hover:bg-[#1a3a5c] transition-colors shadow-md"
+                >
+                  WOMEN
+                </Link>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
 
       {/* ══════════════════════════════════════════════════════════════
           3. WOMEN'S NEW
@@ -334,56 +333,7 @@ export const HomePage = () => {
         </div>
       )}
 
-      {/* ══════════════════════════════════════════════════════════════
-          6. EFFORTLESS ELEGANCE EDITORIAL (Matching Vionellae exact layout)
-      ══════════════════════════════════════════════════════════════ */}
-      <section className="relative bg-white py-12 lg:py-16 overflow-hidden">
-        <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8">
-          {/* Main composite image section with vertical running text overlay */}
-          <div className="relative w-full overflow-hidden">
-            <img
-              src={linenSectionImg}
-              alt="Effortless Elegance Linen Collection"
-              className="w-full h-auto object-cover select-none"
-            />
 
-            {/* Vertical running text placed inside the image height in the center white gap */}
-            <div className="absolute inset-y-0 left-[41.2%] w-[4%] hidden md:flex items-center justify-center pointer-events-none z-10 py-6">
-              <span
-                className="font-serif text-sm sm:text-base md:text-lg lg:text-[21px] font-extrabold uppercase tracking-[0.16em] text-[#0d2137] whitespace-nowrap leading-none"
-                style={{ writingMode: "vertical-rl", textOrientation: "mixed" }}
-              >
-                EFFORTLESS ELEGANCE
-              </span>
-            </div>
-          </div>
-
-          {/* Editorial summary & CTA button below */}
-          <motion.div
-            initial={{ opacity: 0, y: 18 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className="mt-10 flex flex-col items-center text-center max-w-2xl mx-auto px-4"
-          >
-            <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-[#4a6d98] mb-2">
-              MEN'S COLLECTION
-            </span>
-            <h3 className="font-logo text-4xl sm:text-5xl italic font-medium text-gray-900 mb-3">
-              Effortless Elegance
-            </h3>
-            <p className="text-sm text-gray-600 leading-relaxed font-light tracking-wide max-w-lg">
-              Crafted from 100% pure European linen, designed for modern sophistication — where relaxed luxury meets everyday comfort.
-            </p>
-            <Link
-              to="/products?gender=Men"
-              className="mt-6 inline-block bg-[#0d2137] px-10 py-3 text-[12px] font-bold uppercase tracking-[0.18em] text-white hover:bg-[#1a3a5c] transition-colors shadow-sm"
-            >
-              MEN
-            </Link>
-          </motion.div>
-        </div>
-      </section>
 
       {/* ══════════════════════════════════════════════════════════════
           7. MEN'S HOT SALE
