@@ -1,11 +1,11 @@
+const ImageKit = require("@imagekit/nodejs");
+const { toFile } = require("@imagekit/nodejs");
+
 const imagekit = require("../config/imagekit");
 const ApiError = require("../utils/ApiError");
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Image Service (ImageKit Integration)
-//
-// Single source of truth for uploading, deleting, fetching, and transforming
-// images via ImageKit SDK.
+// Image Service (ImageKit Integration using @imagekit/nodejs SDK)
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
@@ -23,11 +23,10 @@ const uploadImage = async (file, folder = "/products") => {
     try {
         const sanitizedFileName = `${Date.now()}-${file.originalname.replace(/[^a-zA-Z0-9.-]/g, "_")}`;
 
-        const uploadResponse = await imagekit.upload({
-            file: file.buffer,
+        const uploadResponse = await imagekit.files.upload({
+            file: await toFile(file.buffer, sanitizedFileName),
             fileName: sanitizedFileName,
-            folder: folder,
-            useUniqueFileName: true
+            folder
         });
 
         return {
@@ -76,7 +75,7 @@ const deleteImage = async (fileId) => {
     }
 
     try {
-        await imagekit.deleteFile(fileId);
+        await imagekit.files.delete(fileId);
         return { success: true, fileId };
     } catch (error) {
         console.error("[ImageService] Delete error:", error);
@@ -96,7 +95,7 @@ const getImageDetails = async (fileId) => {
     }
 
     try {
-        const details = await imagekit.getFileDetails(fileId);
+        const details = await imagekit.files.get(fileId);
         return details;
     } catch (error) {
         console.error("[ImageService] Get details error:", error);
@@ -119,7 +118,7 @@ const generateThumbnail = (url, width = 200, height = 200) => {
 
 /**
  * Dynamic ImageKit URL builder with transformations support.
- * Supports resize, cropping, quality, and format transformations.
+ * Uses helper.buildSrc from @imagekit/nodejs SDK.
  *
  * @param {string} url                               - Base ImageKit image URL
  * @param {Object} options                           - Transformation options
@@ -142,7 +141,7 @@ const generateOptimizedUrl = (url, options = {}) => {
     } = options;
 
     try {
-        if (typeof imagekit.url === "function") {
+        if (imagekit.helper && typeof imagekit.helper.buildSrc === "function") {
             const transformation = [{
                 quality: String(quality),
                 format: format
@@ -152,16 +151,17 @@ const generateOptimizedUrl = (url, options = {}) => {
             if (height) transformation[0].height = String(height);
             if (crop) transformation[0].crop = crop;
 
-            return imagekit.url({
+            return imagekit.helper.buildSrc({
+                urlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT,
                 src: url,
                 transformation
             });
         }
     } catch (e) {
-        // Fallback parameter parsing if SDK helper is unconfigured
+        // Fallback parameter parsing if SDK helper fails
     }
 
-    // Direct URL Parameter Fallback: Append tr=w-...,h-...,q-... to URL
+    // Direct URL Parameter Fallback
     const trParams = [];
     if (width) trParams.push(`w-${width}`);
     if (height) trParams.push(`h-${height}`);
