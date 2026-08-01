@@ -3,6 +3,7 @@ import { ENDPOINTS } from "../constants/api.constants";
 
 export { categoryService } from "./category.service";
 export { brandService } from "./brand.service";
+export { couponService } from "./coupon.service";
 
 export const productService = {
   getAll: async (params) => {
