@@ -29,6 +29,14 @@ export const ENDPOINTS = {
     UPDATE: (id) => `/brands/${id}`,
     DELETE: (id) => `/brands/${id}`,
   },
+  COUPONS: {
+    LIST: "/coupons",
+    DETAIL: (id) => `/coupons/${id}`,
+    CREATE: "/coupons",
+    UPDATE: (id) => `/coupons/${id}`,
+    DELETE: (id) => `/coupons/${id}`,
+    VALIDATE: "/coupons/validate",
+  },
   CART: {
     GET: "/cart",
     ADD: "/cart",
