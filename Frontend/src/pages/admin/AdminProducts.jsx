@@ -1,85 +1,665 @@
 import React, { useState, useEffect } from "react";
 import { AdminHeader } from "../../components/admin/AdminHeader";
-import { productService } from "../../services/api.service";
-import { Button } from "../../components/ui/Button";
-import { Input } from "../../components/ui/Input";
-import { Plus, Trash2, Edit } from "lucide-react";
+import { productService, categoryService, brandService } from "../../services/api.service";
+import { Plus, Trash2, Edit, Search, X, Loader2, AlertCircle, Package } from "lucide-react";
+import { toast } from "sonner";
+
+const FALLBACK_PRODUCTS = [
+  { _id: "1", name: "Full-Cup U-Back Adjustable Bra", gender: "Women", price: 1529, discount: 40, status: "active" },
+  { _id: "2", name: "Men's Athletic Performance Grey", gender: "Men",   price: 1799, discount: 27, status: "active" },
+  { _id: "3", name: "Leaf Embroidered Shaping Bra",   gender: "Women", price: 1879, discount: 42, status: "active" },
+  { _id: "4", name: "Men's Colorblock Geometric",     gender: "Men",   price: 1590, discount: 20, status: "inactive" },
+];
 
 export const AdminProducts = () => {
   const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [brands, setBrands] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+
+  // Modal & Form State
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [formError, setFormError] = useState("");
+
+  const [formData, setFormData] = useState({
+    name: "",
+    slug: "",
+    description: "",
+    gender: "Women",
+    category: "",
+    brand: "",
+    price: "",
+    discount: "0",
+    stock: "10",
+    imageUrl: "",
+    material: "",
+    fit: "Regular",
+    status: "active",
+    isPublished: true,
+    isFeatured: false,
+  });
+
+  const [validationErrors, setValidationErrors] = useState({});
+
+  const generateSlug = (text) => {
+    return text
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9\s-]/g, "")
+      .replace(/\s+/g, "-")
+      .replace(/-+/g, "-");
+  };
+
+  const fetchProducts = async () => {
+    setLoading(true);
+    try {
+      const res = await productService.getAll({ limit: 100 });
+      const list = res?.data?.products ?? res?.products ?? res?.data ?? [];
+      setProducts(Array.isArray(list) && list.length > 0 ? list : FALLBACK_PRODUCTS);
+    } catch (err) {
+      console.error("Failed to fetch products:", err);
+      setProducts(FALLBACK_PRODUCTS);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchOptions = async () => {
+    try {
+      const [catRes, brandRes] = await Promise.allSettled([
+        categoryService.getAll(),
+        brandService.getAll(),
+      ]);
+      if (catRes.status === "fulfilled") {
+        const catList = catRes.value?.data?.categories ?? catRes.value?.categories ?? catRes.value?.data ?? [];
+        setCategories(catList);
+      }
+      if (brandRes.status === "fulfilled") {
+        const brandList = brandRes.value?.data?.brands ?? brandRes.value?.brands ?? brandRes.value?.data ?? [];
+        setBrands(brandList);
+      }
+    } catch (e) {
+      console.error("Failed loading category/brand options:", e);
+    }
+  };
 
   useEffect(() => {
-    productService
-      .getAll()
-      .then((res) => setProducts(res.data?.products || res.products || []))
-      .catch(() => {
-        setProducts([
-          {
-            _id: "1",
-            name: "Silk Evening Gown",
-            gender: "Women",
-            price: 29999,
-            status: "active",
-          },
-          {
-            _id: "2",
-            name: "Tailored Tuxedo Blazer",
-            gender: "Men",
-            price: 18999,
-            status: "active",
-          },
-        ]);
-      })
-      .finally(() => setLoading(false));
+    fetchProducts();
+    fetchOptions();
   }, []);
 
+  const handleInputChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData((prev) => {
+      const updated = { ...prev, [name]: type === "checkbox" ? checked : value };
+      if (name === "name") {
+        updated.slug = generateSlug(value);
+      }
+      return updated;
+    });
+
+    if (validationErrors[name]) {
+      setValidationErrors((prev) => ({ ...prev, [name]: "" }));
+    }
+    setFormError("");
+  };
+
+  const validateForm = () => {
+    const errors = {};
+    if (!formData.name.trim()) {
+      errors.name = "Product name is required";
+    } else if (formData.name.trim().length < 3) {
+      errors.name = "Product name must be at least 3 characters";
+    }
+
+    if (!formData.slug.trim()) {
+      errors.slug = "Slug is required";
+    } else if (!/^[a-z0-9-]+$/.test(formData.slug.trim())) {
+      errors.slug = "Invalid slug format";
+    }
+
+    if (!formData.description.trim()) {
+      errors.description = "Description is required";
+    } else if (formData.description.trim().length < 10) {
+      errors.description = "Description must be at least 10 characters";
+    }
+
+    if (!formData.category) {
+      errors.category = "Category selection is required";
+    }
+
+    if (!formData.brand) {
+      errors.brand = "Brand selection is required";
+    }
+
+    if (!formData.price || isNaN(formData.price) || Number(formData.price) <= 0) {
+      errors.price = "Price must be greater than 0";
+    }
+
+    if (formData.imageUrl.trim() && !/^https?:\/\/.+/.test(formData.imageUrl.trim())) {
+      errors.imageUrl = "Image URL must start with http:// or https://";
+    }
+
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleOpenModal = () => {
+    setFormData({
+      name: "",
+      slug: "",
+      description: "",
+      gender: "Women",
+      category: categories[0]?._id || "",
+      brand: brands[0]?._id || "",
+      price: "",
+      discount: "0",
+      stock: "10",
+      imageUrl: "",
+      material: "",
+      fit: "Regular",
+      status: "active",
+      isPublished: true,
+      isFeatured: false,
+    });
+    setValidationErrors({});
+    setFormError("");
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    if (submitting) return;
+    setIsModalOpen(false);
+    setFormError("");
+    setValidationErrors({});
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setFormError("");
+
+    if (!validateForm()) return;
+
+    setSubmitting(true);
+
+    try {
+      const stockNum = parseInt(formData.stock, 10) || 10;
+      const imgUrl = formData.imageUrl.trim() || "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=500";
+
+      const payload = {
+        name: formData.name.trim(),
+        slug: formData.slug.trim(),
+        description: formData.description.trim(),
+        gender: formData.gender,
+        category: formData.category,
+        brand: formData.brand,
+        price: Number(formData.price),
+        discount: Number(formData.discount) || 0,
+        currency: "INR",
+        material: formData.material.trim(),
+        fit: formData.fit,
+        status: formData.status,
+        isPublished: formData.isPublished,
+        isFeatured: formData.isFeatured,
+        images: [{ url: imgUrl, alt: formData.name.trim() }],
+        // Provide standard variant structure required by backend validator
+        variants: [
+          {
+            color: { name: "Standard", hex: "#000000" },
+            sizes: [{ size: "M", stock: stockNum }],
+          },
+        ],
+      };
+
+      await productService.create(payload);
+
+      toast.success("Product created successfully!");
+      handleCloseModal();
+      await fetchProducts(); // Refresh in place
+    } catch (err) {
+      console.error("Error creating product:", err);
+      const apiMsg = err.response?.data?.message || err.response?.data?.error || err.message || "Failed to create product";
+      setFormError(apiMsg);
+      toast.error(apiMsg);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDelete = async (id, name) => {
+    if (!window.confirm(`Are you sure you want to delete product "${name}"?`)) return;
+    try {
+      await productService.delete(id);
+      toast.success(`Product "${name}" deleted`);
+      fetchProducts();
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to delete product");
+    }
+  };
+
+  const filtered = products.filter((p) =>
+    p.name.toLowerCase().includes(search.toLowerCase()) ||
+    (p.slug && p.slug.toLowerCase().includes(search.toLowerCase()))
+  );
+
   return (
-    <div className="space-y-6 text-left">
-      <AdminHeader title="Product Inventory Management" />
+    <div className="flex flex-col min-h-screen">
+      <AdminHeader title="Products" />
+      <div className="flex-1 p-6 max-w-[1400px] w-full mx-auto space-y-5">
+        {/* Toolbar */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div className="relative flex-1 max-w-sm">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search products..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full border border-gray-300 bg-white pl-9 pr-4 py-2 text-[13px] text-gray-800 placeholder-gray-400 focus:border-[#4a6d98] focus:outline-none rounded-sm"
+            />
+          </div>
+          <button
+            onClick={handleOpenModal}
+            className="flex items-center gap-2 bg-[#0d2137] text-white px-4 py-2 text-[12px] font-bold uppercase tracking-wider hover:bg-[#1a3a5c] transition-colors rounded-sm cursor-pointer"
+          >
+            <Plus className="h-4 w-4" /> Add Product
+          </button>
+        </div>
 
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-bold text-white">All Products ({products.length})</h2>
-        <Button size="sm" className="gap-2">
-          <Plus className="h-4 w-4" /> Add New Product
-        </Button>
+        {/* Table */}
+        <div className="bg-white border border-gray-200 rounded-sm shadow-sm overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+            <h3 className="text-[13px] font-bold uppercase tracking-[0.1em] text-gray-900">
+              All Products ({filtered.length})
+            </h3>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead className="bg-gray-50 text-[10px] font-bold uppercase tracking-wider text-gray-500 border-b border-gray-100">
+                <tr>
+                  <th className="px-6 py-3">Product Name</th>
+                  <th className="px-6 py-3">Gender</th>
+                  <th className="px-6 py-3">Price</th>
+                  <th className="px-6 py-3">Discount</th>
+                  <th className="px-6 py-3">Status</th>
+                  <th className="px-6 py-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {loading ? (
+                  [...Array(4)].map((_, i) => (
+                    <tr key={i}>
+                      {[...Array(6)].map((__, j) => (
+                        <td key={j} className="px-6 py-4">
+                          <div className="h-3 bg-gray-100 rounded animate-pulse w-3/4" />
+                        </td>
+                      ))}
+                    </tr>
+                  ))
+                ) : filtered.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="px-6 py-12 text-center text-[13px] text-gray-400">
+                      No products found
+                    </td>
+                  </tr>
+                ) : (
+                  filtered.map((prod) => (
+                    <tr key={prod._id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-3.5">
+                        <div className="flex items-center gap-3">
+                          <div className="h-9 w-9 rounded-sm bg-gray-100 flex items-center justify-center flex-shrink-0 overflow-hidden border border-gray-200">
+                            {prod.images?.[0]?.url ? (
+                              <img src={prod.images[0].url} alt={prod.name} className="h-full w-full object-cover" />
+                            ) : (
+                              <Package className="h-4 w-4 text-gray-400" />
+                            )}
+                          </div>
+                          <div className="max-w-[240px]">
+                            <p className="font-semibold text-gray-900 text-[13px] truncate">{prod.name}</p>
+                            <p className="text-[11px] text-gray-400 font-mono truncate">{prod.slug}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-3.5 text-[12px] text-gray-600">{prod.gender}</td>
+                      <td className="px-6 py-3.5 font-bold text-gray-900 text-[13px]">
+                        ₹{prod.price?.toLocaleString("en-IN")}
+                      </td>
+                      <td className="px-6 py-3.5 text-[12px] text-gray-500">
+                        {prod.discount ? `${prod.discount}%` : "—"}
+                      </td>
+                      <td className="px-6 py-3.5">
+                        <span className={`px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-sm border ${
+                          prod.status === "active" || prod.status === "Active" || !prod.status
+                            ? "bg-emerald-50 text-emerald-700 border-emerald-100"
+                            : "bg-gray-100 text-gray-500 border-gray-200"
+                        }`}>
+                          {prod.status || "active"}
+                        </span>
+                      </td>
+                      <td className="px-6 py-3.5 text-right">
+                        <div className="flex items-center justify-end gap-1">
+                          <button
+                            onClick={() => handleDelete(prod._id, prod.name)}
+                            className="p-1.5 text-gray-400 hover:text-red-500 transition-colors cursor-pointer rounded-sm hover:bg-red-50"
+                            title="Delete"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
 
-      <div className="overflow-x-auto rounded-xl border border-zinc-800 bg-zinc-900/60 backdrop-blur-md">
-        <table className="w-full text-left text-sm text-zinc-300">
-          <thead className="bg-zinc-950/80 text-xs uppercase text-zinc-400 border-b border-zinc-800">
-            <tr>
-              <th className="px-6 py-3.5">Product Name</th>
-              <th className="px-6 py-3.5">Category / Gender</th>
-              <th className="px-6 py-3.5">Price</th>
-              <th className="px-6 py-3.5">Status</th>
-              <th className="px-6 py-3.5 text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-zinc-800">
-            {products.map((prod) => (
-              <tr key={prod._id} className="hover:bg-zinc-800/40 transition-colors">
-                <td className="px-6 py-4 font-bold text-white">{prod.name}</td>
-                <td className="px-6 py-4 text-xs font-semibold text-purple-400">{prod.gender}</td>
-                <td className="px-6 py-4 font-semibold text-white">₹{prod.price}</td>
-                <td className="px-6 py-4">
-                  <span className="rounded-md bg-emerald-950/80 border border-emerald-800/60 px-2 py-0.5 text-[10px] font-bold text-emerald-400 uppercase">
-                    {prod.status || "Active"}
-                  </span>
-                </td>
-                <td className="px-6 py-4 text-right space-x-2">
-                  <button className="p-1.5 text-zinc-400 hover:text-white transition-colors cursor-pointer">
-                    <Edit className="h-4 w-4" />
-                  </button>
-                  <button className="p-1.5 text-zinc-400 hover:text-rose-400 transition-colors cursor-pointer">
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      {/* ── Add Product Modal ── */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4 overflow-y-auto">
+          <div className="bg-white border border-gray-200 rounded-sm shadow-xl max-w-xl w-full my-8 overflow-hidden animate-fade-in">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50">
+              <div className="flex items-center gap-2">
+                <Package className="h-4 w-4 text-[#0d2137]" />
+                <h3 className="text-[14px] font-bold uppercase tracking-[0.1em] text-gray-900">
+                  Add New Product
+                </h3>
+              </div>
+              <button
+                onClick={handleCloseModal}
+                disabled={submitting}
+                className="p-1 text-gray-400 hover:text-gray-700 transition-colors cursor-pointer rounded-sm disabled:opacity-50"
+              >
+                <X className="h-4.5 w-4.5" />
+              </button>
+            </div>
+
+            {/* Modal Form */}
+            <form onSubmit={handleSubmit} className="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
+              {formError && (
+                <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-sm text-red-700 text-[12px]">
+                  <AlertCircle className="h-4 w-4 flex-shrink-0 text-red-500" />
+                  <span>{formError}</span>
+                </div>
+              )}
+
+              {/* Name field */}
+              <div>
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-600 mb-1">
+                  Product Name <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="name"
+                  placeholder="e.g. Full-Cup U-Back Adjustable Bra"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  disabled={submitting}
+                  className={`w-full border px-3 py-2 text-[13px] text-gray-800 placeholder-gray-400 rounded-sm focus:outline-none ${
+                    validationErrors.name ? "border-red-500 focus:border-red-500" : "border-gray-300 focus:border-[#4a6d98]"
+                  }`}
+                />
+                {validationErrors.name && (
+                  <p className="text-[11px] text-red-500 mt-1">{validationErrors.name}</p>
+                )}
+              </div>
+
+              {/* Slug field */}
+              <div>
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-600 mb-1">
+                  Slug <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="slug"
+                  placeholder="e.g. full-cup-u-back-bra"
+                  value={formData.slug}
+                  onChange={handleInputChange}
+                  disabled={submitting}
+                  className={`w-full border px-3 py-2 text-[13px] font-mono text-gray-800 placeholder-gray-400 rounded-sm focus:outline-none ${
+                    validationErrors.slug ? "border-red-500 focus:border-red-500" : "border-gray-300 focus:border-[#4a6d98]"
+                  }`}
+                />
+                {validationErrors.slug && (
+                  <p className="text-[11px] text-red-500 mt-1">{validationErrors.slug}</p>
+                )}
+              </div>
+
+              {/* Category & Brand row */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-600 mb-1">
+                    Category <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    name="category"
+                    value={formData.category}
+                    onChange={handleInputChange}
+                    disabled={submitting}
+                    className={`w-full border bg-white px-3 py-2 text-[13px] text-gray-800 rounded-sm focus:outline-none ${
+                      validationErrors.category ? "border-red-500" : "border-gray-300 focus:border-[#4a6d98]"
+                    }`}
+                  >
+                    <option value="">Select Category...</option>
+                    {categories.map((c) => (
+                      <option key={c._id} value={c._id}>{c.name}</option>
+                    ))}
+                  </select>
+                  {validationErrors.category && (
+                    <p className="text-[11px] text-red-500 mt-1">{validationErrors.category}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-600 mb-1">
+                    Brand <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    name="brand"
+                    value={formData.brand}
+                    onChange={handleInputChange}
+                    disabled={submitting}
+                    className={`w-full border bg-white px-3 py-2 text-[13px] text-gray-800 rounded-sm focus:outline-none ${
+                      validationErrors.brand ? "border-red-500" : "border-gray-300 focus:border-[#4a6d98]"
+                    }`}
+                  >
+                    <option value="">Select Brand...</option>
+                    {brands.map((b) => (
+                      <option key={b._id} value={b._id}>{b.name}</option>
+                    ))}
+                  </select>
+                  {validationErrors.brand && (
+                    <p className="text-[11px] text-red-500 mt-1">{validationErrors.brand}</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Gender & Fit row */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-600 mb-1">
+                    Gender <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    name="gender"
+                    value={formData.gender}
+                    onChange={handleInputChange}
+                    disabled={submitting}
+                    className="w-full border border-gray-300 bg-white px-3 py-2 text-[13px] text-gray-800 rounded-sm focus:border-[#4a6d98] focus:outline-none"
+                  >
+                    <option value="Women">Women</option>
+                    <option value="Men">Men</option>
+                    <option value="Unisex">Unisex</option>
+                    <option value="Kids">Kids</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-600 mb-1">
+                    Fit Type
+                  </label>
+                  <select
+                    name="fit"
+                    value={formData.fit}
+                    onChange={handleInputChange}
+                    disabled={submitting}
+                    className="w-full border border-gray-300 bg-white px-3 py-2 text-[13px] text-gray-800 rounded-sm focus:border-[#4a6d98] focus:outline-none"
+                  >
+                    <option value="Regular">Regular</option>
+                    <option value="Slim">Slim</option>
+                    <option value="Relaxed">Relaxed</option>
+                    <option value="Oversized">Oversized</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Price, Discount & Stock */}
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-600 mb-1">
+                    Price (₹) <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    name="price"
+                    placeholder="1999"
+                    value={formData.price}
+                    onChange={handleInputChange}
+                    disabled={submitting}
+                    className={`w-full border px-3 py-2 text-[13px] text-gray-800 placeholder-gray-400 rounded-sm focus:outline-none ${
+                      validationErrors.price ? "border-red-500 focus:border-red-500" : "border-gray-300 focus:border-[#4a6d98]"
+                    }`}
+                  />
+                  {validationErrors.price && (
+                    <p className="text-[11px] text-red-500 mt-1">{validationErrors.price}</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-600 mb-1">
+                    Discount (%)
+                  </label>
+                  <input
+                    type="number"
+                    name="discount"
+                    placeholder="20"
+                    value={formData.discount}
+                    onChange={handleInputChange}
+                    disabled={submitting}
+                    className="w-full border border-gray-300 px-3 py-2 text-[13px] text-gray-800 placeholder-gray-400 rounded-sm focus:border-[#4a6d98] focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-600 mb-1">
+                    Initial Stock
+                  </label>
+                  <input
+                    type="number"
+                    name="stock"
+                    placeholder="10"
+                    value={formData.stock}
+                    onChange={handleInputChange}
+                    disabled={submitting}
+                    className="w-full border border-gray-300 px-3 py-2 text-[13px] text-gray-800 placeholder-gray-400 rounded-sm focus:border-[#4a6d98] focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              {/* Description */}
+              <div>
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-600 mb-1">
+                  Description <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  name="description"
+                  rows={3}
+                  placeholder="Detailed description of the product material, design, comfort, and luxury features..."
+                  value={formData.description}
+                  onChange={handleInputChange}
+                  disabled={submitting}
+                  className={`w-full border px-3 py-2 text-[13px] text-gray-800 placeholder-gray-400 rounded-sm focus:outline-none ${
+                    validationErrors.description ? "border-red-500 focus:border-red-500" : "border-gray-300 focus:border-[#4a6d98]"
+                  }`}
+                />
+                {validationErrors.description && (
+                  <p className="text-[11px] text-red-500 mt-1">{validationErrors.description}</p>
+                )}
+              </div>
+
+              {/* Image URL */}
+              <div>
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-600 mb-1">
+                  Product Image URL <span className="text-gray-400 font-normal">(Optional)</span>
+                </label>
+                <input
+                  type="text"
+                  name="imageUrl"
+                  placeholder="https://images.unsplash.com/photo-..."
+                  value={formData.imageUrl}
+                  onChange={handleInputChange}
+                  disabled={submitting}
+                  className={`w-full border px-3 py-2 text-[13px] text-gray-800 placeholder-gray-400 rounded-sm focus:outline-none ${
+                    validationErrors.imageUrl ? "border-red-500 focus:border-red-500" : "border-gray-300 focus:border-[#4a6d98]"
+                  }`}
+                />
+                {validationErrors.imageUrl && (
+                  <p className="text-[11px] text-red-500 mt-1">{validationErrors.imageUrl}</p>
+                )}
+              </div>
+
+              {/* Status */}
+              <div>
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-600 mb-1">
+                  Status
+                </label>
+                <select
+                  name="status"
+                  value={formData.status}
+                  onChange={handleInputChange}
+                  disabled={submitting}
+                  className="w-full border border-gray-300 bg-white px-3 py-2 text-[13px] text-gray-800 rounded-sm focus:border-[#4a6d98] focus:outline-none"
+                >
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive / Draft</option>
+                  <option value="out_of_stock">Out of Stock</option>
+                </select>
+              </div>
+
+              {/* Modal Actions */}
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-100">
+                <button
+                  type="button"
+                  onClick={handleCloseModal}
+                  disabled={submitting}
+                  className="px-4 py-2 text-[12px] font-semibold text-gray-600 hover:bg-gray-100 transition-colors rounded-sm cursor-pointer disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="flex items-center gap-2 bg-[#0d2137] text-white px-5 py-2 text-[12px] font-bold uppercase tracking-wider hover:bg-[#1a3a5c] transition-colors rounded-sm cursor-pointer disabled:opacity-50"
+                >
+                  {submitting ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Creating...
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="h-4 w-4" />
+                      Create Product
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
