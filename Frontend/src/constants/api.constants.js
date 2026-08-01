@@ -22,6 +22,13 @@ export const ENDPOINTS = {
     UPDATE: (id) => `/categories/${id}`,
     DELETE: (id) => `/categories/${id}`,
   },
+  BRANDS: {
+    LIST: "/brands",
+    DETAIL: (id) => `/brands/${id}`,
+    CREATE: "/brands",
+    UPDATE: (id) => `/brands/${id}`,
+    DELETE: (id) => `/brands/${id}`,
+  },
   CART: {
     GET: "/cart",
     ADD: "/cart",
