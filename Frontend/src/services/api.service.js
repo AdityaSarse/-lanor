@@ -1,6 +1,8 @@
 import apiClient from "../utils/axios";
 import { ENDPOINTS } from "../constants/api.constants";
 
+export { categoryService } from "./category.service";
+
 export const productService = {
   getAll: async (params) => {
     const response = await apiClient.get(ENDPOINTS.PRODUCTS.LIST, { params });

@@ -15,6 +15,13 @@ export const ENDPOINTS = {
     UPDATE: (id) => `/products/${id}`,
     DELETE: (id) => `/products/${id}`,
   },
+  CATEGORIES: {
+    LIST: "/categories",
+    DETAIL: (id) => `/categories/${id}`,
+    CREATE: "/categories",
+    UPDATE: (id) => `/categories/${id}`,
+    DELETE: (id) => `/categories/${id}`,
+  },
   CART: {
     GET: "/cart",
     ADD: "/cart",
