@@ -2,6 +2,7 @@ import apiClient from "../utils/axios";
 import { ENDPOINTS } from "../constants/api.constants";
 
 export { categoryService } from "./category.service";
+export { brandService } from "./brand.service";
 
 export const productService = {
   getAll: async (params) => {
