@@ -8,20 +8,11 @@ import heroImg from "../../assets/HEROIMAGE.png";
 import img1st from "../../assets/1st.png";
 import img2nd from "../../assets/2nd.png";
 import bgHero2 from "../../assets/BackgroundHero2.png";
+import img3rd from "../../assets/3rd.png";
+import img4th from "../../assets/4th.png";
+import bgB2 from "../../assets/B2.png";
 
-/* ─── Editorial "Shop the Edits" image pairs ──────────────────────── */
-const EDITS = [
-  {
-    label: "WOMEN'S EDIT",
-    href: "/products?gender=Women",
-    image: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=900",
-  },
-  {
-    label: "MEN'S EDIT",
-    href: "/products?gender=Men",
-    image: "https://images.unsplash.com/photo-1617137984095-74e4e5e3613f?auto=format&fit=crop&q=80&w=900",
-  },
-];
+
 
 /* ─── Fallback product datasets ──────────────────────────────────────── */
 const FALLBACK_WOMEN = [
@@ -218,16 +209,16 @@ export const HomePage = () => {
             style={{ backgroundImage: `url(${bgHero2})` }}
           >
             {/* Left side: 1st.png */}
-            <div className="w-full md:w-[52%] relative flex items-end justify-start p-0 overflow-hidden min-h-[300px] lg:min-h-[380px]">
+            <div className="w-full md:w-[49%] relative flex items-end justify-start p-0 overflow-hidden min-h-[300px] lg:min-h-[380px]">
               <img
                 src={img1st}
                 alt="Standing Model — Denim Dress"
-                className="w-full h-[92%] object-cover object-bottom ml-2 sm:ml-4 lg:ml-6 mb-4 sm:mb-6 lg:mb-8 select-none transition-transform duration-500"
+                className="w-full h-full object-cover object-bottom ml-2 sm:ml-4 lg:ml-6 select-none transition-transform duration-500"
               />
             </div>
 
             {/* Right side: Typography & 2nd.png */}
-            <div className="w-full md:w-1/2 relative flex flex-col justify-between p-6 sm:p-8 lg:p-10">
+            <div className="w-full md:w-[49%] relative flex flex-col justify-between p-6 sm:p-8 lg:p-10">
               {/* Top Typography: TRENDING DENIM DESTINATION STYLE */}
               <div className="relative z-10 text-left pt-2">
                 <span className="block text-xs sm:text-sm font-semibold uppercase tracking-[0.22em] text-[#0d2137]">
@@ -285,36 +276,57 @@ export const HomePage = () => {
       )}
 
       {/* ══════════════════════════════════════════════════════════════
-          4. SHOP THE EDITS
+          4. FEATURED EDITORIAL SECTION (WOMEN'S & VINTAGE DENIM)
       ══════════════════════════════════════════════════════════════ */}
-      <section className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-10 py-10">
-        <h2 className="mb-7 text-center text-[22px] font-bold tracking-[0.1em] text-gray-900 uppercase">
-          SHOP THE EDITS
-        </h2>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          {EDITS.map((edit, i) => (
-            <motion.div
-              key={edit.label}
-              initial={{ opacity: 0, x: i === 0 ? -20 : 20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: i * 0.1 }}
-            >
-              <Link to={edit.href} className="group relative block aspect-[4/5] overflow-hidden bg-gray-100">
-                <img
-                  src={edit.image}
-                  alt={edit.label}
-                  className="h-full w-full object-cover object-center transition-transform duration-700 group-hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-black/25 transition-opacity duration-300 group-hover:bg-black/35" />
-                <div className="absolute inset-x-0 bottom-0 p-6 text-center">
-                  <span className="inline-block bg-white px-8 py-2.5 text-[12px] font-bold uppercase tracking-[0.15em] text-[#0d2137] hover:bg-gray-100 transition-colors">
-                    {edit.label}
-                  </span>
-                </div>
-              </Link>
-            </motion.div>
-          ))}
+      <section className="relative bg-[#f7f7f7] py-8 lg:py-12 overflow-hidden select-none">
+        <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-10">
+          <h2 className="mb-7 text-center text-[22px] font-bold tracking-[0.1em] text-gray-900 uppercase">
+            SHOP THE EDITS
+          </h2>
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="relative w-full overflow-hidden bg-cover bg-center shadow-xl rounded-sm p-0"
+            style={{ backgroundImage: `url(${bgB2})` }}
+          >
+            <div className="flex flex-col md:flex-row justify-between items-stretch gap-4 md:gap-0">
+              {/* Left card: 3rd.png */}
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6 }}
+                className="w-full md:w-[49%] group relative overflow-hidden shadow-md transition-all duration-300 hover:shadow-xl flex items-center justify-center"
+              >
+                <Link to="/products?gender=Women" className="block w-full h-full relative overflow-hidden">
+                  <img
+                    src={img3rd}
+                    alt="Women's Collection"
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.02]"
+                  />
+                </Link>
+              </motion.div>
+
+              {/* Right card: 4th.png */}
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: 0.1 }}
+                className="w-full md:w-[49%] group relative overflow-hidden shadow-md transition-all duration-300 hover:shadow-xl flex items-center justify-center"
+              >
+                <Link to="/products?category=denim" className="block w-full h-full relative overflow-hidden">
+                  <img
+                    src={img4th}
+                    alt="Vintage Blue Denim"
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.02]"
+                  />
+                </Link>
+              </motion.div>
+            </div>
+          </motion.div>
         </div>
       </section>
 
