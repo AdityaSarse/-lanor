@@ -16,8 +16,16 @@ import { AdminLayout } from "../layouts/AdminLayout";
 import { AdminDashboard } from "../pages/admin/AdminDashboard";
 import { AdminProducts } from "../pages/admin/AdminProducts";
 import { AdminOrders } from "../pages/admin/AdminOrders";
+import { AdminCategories } from "../pages/admin/AdminCategories";
+import { AdminBrands } from "../pages/admin/AdminBrands";
+import { AdminCoupons } from "../pages/admin/AdminCoupons";
+import { AdminPayments } from "../pages/admin/AdminPayments";
+import { AdminCustomers } from "../pages/admin/AdminCustomers";
+import { AdminAnalytics } from "../pages/admin/AdminAnalytics";
+import { AdminSettings } from "../pages/admin/AdminSettings";
 
 import { ProtectedRoute } from "./ProtectedRoute";
+import { GuestRoute } from "./GuestRoute";
 
 export const AppRoutes = () => {
   return (
@@ -29,25 +37,43 @@ export const AppRoutes = () => {
         <Route path="products/:id" element={<ProductDetailPage />} />
         <Route path="cart" element={<CartPage />} />
 
-        {/* Protected Customer Routes */}
+        {/* Protected Customer Routes — requires login */}
         <Route element={<ProtectedRoute />}>
           <Route path="checkout" element={<CheckoutPage />} />
           <Route path="orders" element={<OrdersPage />} />
         </Route>
       </Route>
 
-      {/* Authentication Routes */}
-      <Route path="/auth" element={<AuthLayout />}>
-        <Route path="login" element={<LoginPage />} />
-        <Route path="register" element={<RegisterPage />} />
+      {/* Authentication Routes — redirect away if already logged in */}
+      <Route element={<GuestRoute />}>
+        <Route path="/auth" element={<AuthLayout />}>
+          <Route path="login" element={<LoginPage />} />
+          <Route path="register" element={<RegisterPage />} />
+        </Route>
       </Route>
 
-      {/* Protected Admin Portal Routes */}
+      {/* Protected Admin Portal Routes — requires role === "admin" */}
       <Route element={<ProtectedRoute requireAdmin={true} />}>
         <Route path="/admin" element={<AdminLayout />}>
-          <Route path="dashboard" element={<AdminDashboard />} />
-          <Route path="products" element={<AdminProducts />} />
-          <Route path="orders" element={<AdminOrders />} />
+          <Route index element={<Navigate to="dashboard" replace />} />
+          <Route path="dashboard"  element={<AdminDashboard />} />
+
+          {/* Catalog */}
+          <Route path="products"   element={<AdminProducts />} />
+          <Route path="categories" element={<AdminCategories />} />
+          <Route path="brands"     element={<AdminBrands />} />
+
+          {/* Sales */}
+          <Route path="orders"     element={<AdminOrders />} />
+          <Route path="coupons"    element={<AdminCoupons />} />
+          <Route path="payments"   element={<AdminPayments />} />
+
+          {/* Users */}
+          <Route path="customers"  element={<AdminCustomers />} />
+
+          {/* Other */}
+          <Route path="analytics"  element={<AdminAnalytics />} />
+          <Route path="settings"   element={<AdminSettings />} />
         </Route>
       </Route>
 
