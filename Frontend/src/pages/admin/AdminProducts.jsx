@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { AdminHeader } from "../../components/admin/AdminHeader";
-import { productService, categoryService, brandService } from "../../services/api.service";
-import { Plus, Trash2, Edit, Search, X, Loader2, AlertCircle, Package } from "lucide-react";
+import { productService, categoryService, brandService, uploadService } from "../../services/api.service";
+import { Plus, Trash2, Edit, Search, X, Loader2, AlertCircle, Package, Upload, Image as ImageIcon, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 
 const FALLBACK_PRODUCTS = [
@@ -21,7 +21,10 @@ export const AdminProducts = () => {
   // Modal & Form State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [formError, setFormError] = useState("");
+
+  const fileInputRef = useRef(null);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -106,6 +109,48 @@ export const AdminProducts = () => {
     setFormError("");
   };
 
+  // Direct Image File Upload Handler
+  const handleFileUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select a valid image file (JPG, PNG, WEBP, etc.)");
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image file size must be less than 5MB");
+      return;
+    }
+
+    setUploadingImage(true);
+    setFormError("");
+
+    try {
+      const response = await uploadService.uploadSingle(file, "/products");
+      // Extract URL from standard ApiResponse structure
+      const uploadedUrl = response?.data?.url || response?.url || response?.data?.result?.url || "";
+
+      if (uploadedUrl) {
+        setFormData((prev) => ({ ...prev, imageUrl: uploadedUrl }));
+        toast.success("Image uploaded successfully!");
+      } else {
+        throw new Error("No URL returned from image upload server");
+      }
+    } catch (err) {
+      console.error("Image upload failed:", err);
+      const msg = err.response?.data?.message || err.message || "Image upload failed";
+      toast.error(msg);
+    } finally {
+      setUploadingImage(false);
+      // Reset input value so re-selecting the same file works
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
   const validateForm = () => {
     const errors = {};
     if (!formData.name.trim()) {
@@ -138,10 +183,6 @@ export const AdminProducts = () => {
       errors.price = "Price must be greater than 0";
     }
 
-    if (formData.imageUrl.trim() && !/^https?:\/\/.+/.test(formData.imageUrl.trim())) {
-      errors.imageUrl = "Image URL must start with http:// or https://";
-    }
-
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -170,7 +211,7 @@ export const AdminProducts = () => {
   };
 
   const handleCloseModal = () => {
-    if (submitting) return;
+    if (submitting || uploadingImage) return;
     setIsModalOpen(false);
     setFormError("");
     setValidationErrors({});
@@ -204,7 +245,6 @@ export const AdminProducts = () => {
         isPublished: formData.isPublished,
         isFeatured: formData.isFeatured,
         images: [{ url: imgUrl, alt: formData.name.trim() }],
-        // Provide standard variant structure required by backend validator
         variants: [
           {
             color: { name: "Standard", hex: "#000000" },
@@ -372,7 +412,7 @@ export const AdminProducts = () => {
               </div>
               <button
                 onClick={handleCloseModal}
-                disabled={submitting}
+                disabled={submitting || uploadingImage}
                 className="p-1 text-gray-400 hover:text-gray-700 transition-colors cursor-pointer rounded-sm disabled:opacity-50"
               >
                 <X className="h-4.5 w-4.5" />
@@ -589,25 +629,83 @@ export const AdminProducts = () => {
                 )}
               </div>
 
-              {/* Image URL */}
+              {/* ── Product Image: Direct Upload & Thumbnail Preview ── */}
               <div>
                 <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-600 mb-1">
-                  Product Image URL <span className="text-gray-400 font-normal">(Optional)</span>
+                  Product Image
                 </label>
+
+                {/* Hidden File Input */}
                 <input
-                  type="text"
-                  name="imageUrl"
-                  placeholder="https://images.unsplash.com/photo-..."
-                  value={formData.imageUrl}
-                  onChange={handleInputChange}
-                  disabled={submitting}
-                  className={`w-full border px-3 py-2 text-[13px] text-gray-800 placeholder-gray-400 rounded-sm focus:outline-none ${
-                    validationErrors.imageUrl ? "border-red-500 focus:border-red-500" : "border-gray-300 focus:border-[#4a6d98]"
-                  }`}
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileUpload}
+                  accept="image/jpeg,image/png,image/webp,image/avif"
+                  className="hidden"
                 />
-                {validationErrors.imageUrl && (
-                  <p className="text-[11px] text-red-500 mt-1">{validationErrors.imageUrl}</p>
+
+                {/* Upload Box or Image Preview */}
+                {formData.imageUrl ? (
+                  <div className="relative border border-gray-200 rounded-sm p-3 bg-gray-50 flex items-center gap-4">
+                    <div className="h-16 w-16 rounded-sm bg-white border border-gray-200 overflow-hidden flex-shrink-0">
+                      <img src={formData.imageUrl} alt="Uploaded product preview" className="h-full w-full object-cover" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1 text-[12px] font-semibold text-emerald-600">
+                        <CheckCircle className="h-4 w-4" /> Image Ready
+                      </div>
+                      <p className="text-[11px] text-gray-400 font-mono truncate mt-0.5">{formData.imageUrl}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setFormData((prev) => ({ ...prev, imageUrl: "" }))}
+                      className="p-1 text-gray-400 hover:text-red-500 transition-colors cursor-pointer"
+                      title="Remove image"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <div
+                    onClick={() => fileInputRef.current?.click()}
+                    className={`border-2 border-dashed rounded-sm p-5 text-center cursor-pointer transition-colors ${
+                      uploadingImage
+                        ? "border-[#4a6d98] bg-[#4a6d98]/5 cursor-wait"
+                        : "border-gray-300 hover:border-[#0d2137] bg-gray-50 hover:bg-gray-100/60"
+                    }`}
+                  >
+                    {uploadingImage ? (
+                      <div className="flex flex-col items-center justify-center space-y-2 py-2">
+                        <Loader2 className="h-6 w-6 text-[#0d2137] animate-spin" />
+                        <p className="text-[12px] font-semibold text-gray-700">Uploading image to server...</p>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center space-y-1.5 py-1">
+                        <Upload className="h-6 w-6 text-gray-400" />
+                        <p className="text-[13px] font-semibold text-gray-800">
+                          Click to select image file from computer
+                        </p>
+                        <p className="text-[11px] text-gray-400">
+                          Supports PNG, JPG, WEBP, AVIF (Max 5MB)
+                        </p>
+                      </div>
+                    )}
+                  </div>
                 )}
+
+                {/* Optional manual URL input fallback */}
+                <div className="mt-2 flex items-center gap-2">
+                  <span className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Or enter URL:</span>
+                  <input
+                    type="text"
+                    name="imageUrl"
+                    placeholder="https://example.com/image.jpg"
+                    value={formData.imageUrl}
+                    onChange={handleInputChange}
+                    disabled={submitting || uploadingImage}
+                    className="flex-1 border border-gray-300 px-2.5 py-1 text-[12px] text-gray-800 placeholder-gray-400 rounded-sm focus:border-[#4a6d98] focus:outline-none"
+                  />
+                </div>
               </div>
 
               {/* Status */}
@@ -633,14 +731,14 @@ export const AdminProducts = () => {
                 <button
                   type="button"
                   onClick={handleCloseModal}
-                  disabled={submitting}
+                  disabled={submitting || uploadingImage}
                   className="px-4 py-2 text-[12px] font-semibold text-gray-600 hover:bg-gray-100 transition-colors rounded-sm cursor-pointer disabled:opacity-50"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  disabled={submitting}
+                  disabled={submitting || uploadingImage}
                   className="flex items-center gap-2 bg-[#0d2137] text-white px-5 py-2 text-[12px] font-bold uppercase tracking-wider hover:bg-[#1a3a5c] transition-colors rounded-sm cursor-pointer disabled:opacity-50"
                 >
                   {submitting ? (
