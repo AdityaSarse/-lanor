@@ -9,7 +9,11 @@
 // Add a new size or currency here and every module picks it up automatically.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const PRODUCT_SIZES = ["XS", "S", "M", "L", "XL", "XXL", "XXXL"];
+const PRODUCT_SIZES = [
+    "XS", "S", "M", "L", "XL", "XXL", "XXXL",
+    "32B", "34B", "34C", "36B", "36C", "36D", "38B", "38D",
+    "28", "30", "32", "34", "36", "38"
+];
 
 const PRODUCT_CURRENCIES = ["INR", "USD", "EUR", "GBP"];
 

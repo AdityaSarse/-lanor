@@ -53,11 +53,11 @@ const SEED_PRODUCTS = [
     variants: [
       {
         color: { name: "Rose Nude", hex: "#e0b0a2" },
-        sizes: [{ size: "32B", stock: 15 }, { size: "34B", stock: 20 }, { size: "36C", stock: 12 }],
+        sizes: [{ size: "S", stock: 15 }, { size: "M", stock: 20 }, { size: "L", stock: 12 }],
       },
       {
         color: { name: "Midnight Black", hex: "#111111" },
-        sizes: [{ size: "32B", stock: 10 }, { size: "34B", stock: 18 }, { size: "36C", stock: 14 }],
+        sizes: [{ size: "S", stock: 10 }, { size: "M", stock: 18 }, { size: "L", stock: 14 }],
       },
     ],
   },
@@ -80,7 +80,7 @@ const SEED_PRODUCTS = [
     variants: [
       {
         color: { name: "Champagne Beige", hex: "#f3e5ab" },
-        sizes: [{ size: "34C", stock: 15 }, { size: "36D", stock: 22 }, { size: "38D", stock: 10 }],
+        sizes: [{ size: "M", stock: 15 }, { size: "L", stock: 22 }, { size: "XL", stock: 10 }],
       },
     ],
   },
