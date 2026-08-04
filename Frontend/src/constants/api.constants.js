@@ -42,19 +42,36 @@ export const ENDPOINTS = {
     ADD: "/cart",
     UPDATE: (id) => `/cart/${id}`,
     DELETE: (id) => `/cart/${id}`,
+    CLEAR: "/cart",
+  },
+  WISHLIST: {
+    GET: "/wishlist",
+    ADD: (productId) => `/wishlist/${productId}`,
+    REMOVE: (productId) => `/wishlist/${productId}`,
+    CLEAR: "/wishlist",
+  },
+  ADDRESS: {
+    LIST: "/address",
+    CREATE: "/address",
+    UPDATE: (id) => `/address/${id}`,
+    DELETE: (id) => `/address/${id}`,
+    SET_DEFAULT: (id) => `/address/${id}/default`,
   },
   ORDERS: {
     MY_ORDERS: "/orders",
     PLACE: "/orders",
     DETAIL: (id) => `/orders/${id}`,
     UPDATE_STATUS: (id) => `/orders/${id}/status`,
+    CANCEL: (id) => `/orders/${id}/cancel`,
   },
   PAYMENTS: {
     CREATE: "/payments/create",
     VERIFY: "/payments/verify",
+    REFUND: (id) => `/payments/${id}/refund`,
   },
   UPLOAD: {
     SINGLE: "/upload/single",
     MULTIPLE: "/upload/multiple",
   },
 };
+

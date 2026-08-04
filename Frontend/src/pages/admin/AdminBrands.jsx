@@ -1,15 +1,16 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { AdminHeader } from "../../components/admin/AdminHeader";
 import { brandService } from "../../services/brand.service";
-import { Award, Plus, Search, X, Loader2, AlertCircle, Trash2 } from "lucide-react";
+import { uploadService } from "../../services/upload.service";
+import { Award, Plus, Search, X, Loader2, AlertCircle, Trash2, Upload, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 
 const FALLBACK_BRANDS = [
-  { _id: "1", name: "Élanor",      slug: "elanor",      productCount: 42, country: "India",  status: "active" },
-  { _id: "2", name: "Vionellae",   slug: "vionellae",   productCount: 18, country: "France", status: "active" },
-  { _id: "3", name: "Luxara",      slug: "luxara",      productCount: 11, country: "Italy",  status: "active" },
-  { _id: "4", name: "PureForm",    slug: "pureform",    productCount: 7,  country: "India",  status: "inactive" },
-  { _id: "5", name: "ActiveEdge",  slug: "activeedge",  productCount: 5,  country: "USA",    status: "active" },
+  { _id: "1", name: "Élanor Essentials", slug: "elanor-essentials", productCount: 42, country: "India",  status: "active" },
+  { _id: "2", name: "Luna Luxe",         slug: "luna-luxe",         productCount: 28, country: "France", status: "active" },
+  { _id: "3", name: "Veloura",           slug: "veloura",           productCount: 19, country: "Italy",  status: "active" },
+  { _id: "4", name: "Silk & Sage",       slug: "silk-sage",         productCount: 15, country: "UK",     status: "active" },
+  { _id: "5", name: "Noir Belle",        slug: "noir-belle",        productCount: 22, country: "France", status: "active" },
 ];
 
 export const AdminBrands = () => {
@@ -20,7 +21,10 @@ export const AdminBrands = () => {
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
   const [formError, setFormError] = useState("");
+
+  const fileInputRef = useRef(null);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -35,7 +39,6 @@ export const AdminBrands = () => {
 
   const [validationErrors, setValidationErrors] = useState({});
 
-  // Auto slugify helper
   const generateSlug = (text) => {
     return text
       .toLowerCase()
@@ -45,7 +48,6 @@ export const AdminBrands = () => {
       .replace(/-+/g, "-");
   };
 
-  // Fetch Brands from API
   const fetchBrands = async () => {
     setLoading(true);
     try {
@@ -80,7 +82,43 @@ export const AdminBrands = () => {
     setFormError("");
   };
 
-  // Form validation
+  // Direct Logo File Upload Handler
+  const handleFileUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select a valid image file");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Logo file size must be less than 5MB");
+      return;
+    }
+
+    setUploadingLogo(true);
+    setFormError("");
+
+    try {
+      const response = await uploadService.uploadSingle(file, "/brands");
+      const uploadedUrl = response?.data?.url || response?.url || response?.data?.result?.url || "";
+
+      if (uploadedUrl) {
+        setFormData((prev) => ({ ...prev, logoUrl: uploadedUrl }));
+        toast.success("Brand logo uploaded!");
+      } else {
+        throw new Error("No URL returned from server");
+      }
+    } catch (err) {
+      console.error("Logo upload failed:", err);
+      toast.error(err.response?.data?.message || err.message || "Failed to upload logo image");
+    } finally {
+      setUploadingLogo(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
   const validateForm = () => {
     const errors = {};
     if (!formData.name.trim()) {
@@ -93,10 +131,6 @@ export const AdminBrands = () => {
       errors.slug = "Slug is required";
     } else if (!/^[a-z0-9-]+$/.test(formData.slug.trim())) {
       errors.slug = "Slug can only contain lowercase letters, numbers, and hyphens";
-    }
-
-    if (formData.logoUrl.trim() && !/^https?:\/\/.+/.test(formData.logoUrl.trim())) {
-      errors.logoUrl = "Logo URL must start with http:// or https://";
     }
 
     if (formData.website.trim() && !/^https?:\/\/.+/.test(formData.website.trim())) {
@@ -123,7 +157,7 @@ export const AdminBrands = () => {
   };
 
   const handleCloseModal = () => {
-    if (submitting) return;
+    if (submitting || uploadingLogo) return;
     setIsModalOpen(false);
     setFormError("");
     setValidationErrors({});
@@ -155,7 +189,7 @@ export const AdminBrands = () => {
 
       toast.success("Brand created successfully!");
       handleCloseModal();
-      await fetchBrands(); // In-place refresh
+      await fetchBrands();
     } catch (err) {
       console.error("Error creating brand:", err);
       const apiMsg = err.response?.data?.message || err.response?.data?.error || err.message || "Failed to create brand";
@@ -301,8 +335,8 @@ export const AdminBrands = () => {
 
       {/* ── Add Brand Modal ── */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
-          <div className="bg-white border border-gray-200 rounded-sm shadow-xl max-w-md w-full overflow-hidden animate-fade-in">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4 overflow-y-auto">
+          <div className="bg-white border border-gray-200 rounded-sm shadow-xl max-w-md w-full my-8 overflow-hidden animate-fade-in">
             {/* Modal Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50">
               <div className="flex items-center gap-2">
@@ -313,7 +347,7 @@ export const AdminBrands = () => {
               </div>
               <button
                 onClick={handleCloseModal}
-                disabled={submitting}
+                disabled={submitting || uploadingLogo}
                 className="p-1 text-gray-400 hover:text-gray-700 transition-colors cursor-pointer rounded-sm disabled:opacity-50"
               >
                 <X className="h-4.5 w-4.5" />
@@ -321,7 +355,7 @@ export const AdminBrands = () => {
             </div>
 
             {/* Modal Form */}
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
+            <form onSubmit={handleSubmit} className="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
               {formError && (
                 <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-sm text-red-700 text-[12px]">
                   <AlertCircle className="h-4 w-4 flex-shrink-0 text-red-500" />
@@ -337,7 +371,7 @@ export const AdminBrands = () => {
                 <input
                   type="text"
                   name="name"
-                  placeholder="e.g. Vionellae Paris"
+                  placeholder="e.g. Élanor Essentials, Luna Luxe"
                   value={formData.name}
                   onChange={handleInputChange}
                   disabled={submitting}
@@ -358,7 +392,7 @@ export const AdminBrands = () => {
                 <input
                   type="text"
                   name="slug"
-                  placeholder="e.g. vionellae-paris"
+                  placeholder="e.g. elanor-essentials, luna-luxe"
                   value={formData.slug}
                   onChange={handleInputChange}
                   disabled={submitting}
@@ -408,25 +442,78 @@ export const AdminBrands = () => {
                 </div>
               </div>
 
-              {/* Logo URL */}
+              {/* ── Brand Logo: Direct Upload & Preview ── */}
               <div>
                 <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-600 mb-1">
-                  Logo URL <span className="text-gray-400 font-normal">(Optional)</span>
+                  Brand Logo
                 </label>
+
                 <input
-                  type="text"
-                  name="logoUrl"
-                  placeholder="https://example.com/logo.png"
-                  value={formData.logoUrl}
-                  onChange={handleInputChange}
-                  disabled={submitting}
-                  className={`w-full border px-3 py-2 text-[13px] text-gray-800 placeholder-gray-400 rounded-sm focus:outline-none ${
-                    validationErrors.logoUrl ? "border-red-500 focus:border-red-500" : "border-gray-300 focus:border-[#4a6d98]"
-                  }`}
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileUpload}
+                  accept="image/jpeg,image/png,image/webp,image/avif"
+                  className="hidden"
                 />
-                {validationErrors.logoUrl && (
-                  <p className="text-[11px] text-red-500 mt-1">{validationErrors.logoUrl}</p>
+
+                {formData.logoUrl ? (
+                  <div className="relative border border-gray-200 rounded-sm p-3 bg-gray-50 flex items-center gap-3">
+                    <div className="h-14 w-14 rounded-sm bg-white border border-gray-200 overflow-hidden flex-shrink-0 flex items-center justify-center p-1">
+                      <img src={formData.logoUrl} alt="Logo preview" className="h-full w-full object-contain" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1 text-[12px] font-semibold text-emerald-600">
+                        <CheckCircle className="h-3.5 w-3.5" /> Logo Ready
+                      </div>
+                      <p className="text-[11px] text-gray-400 font-mono truncate mt-0.5">{formData.logoUrl}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setFormData((prev) => ({ ...prev, logoUrl: "" }))}
+                      className="p-1 text-gray-400 hover:text-red-500 transition-colors cursor-pointer"
+                      title="Remove logo"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <div
+                    onClick={() => fileInputRef.current?.click()}
+                    className={`border-2 border-dashed rounded-sm p-4 text-center cursor-pointer transition-colors ${
+                      uploadingLogo
+                        ? "border-[#4a6d98] bg-[#4a6d98]/5 cursor-wait"
+                        : "border-gray-300 hover:border-[#0d2137] bg-gray-50 hover:bg-gray-100/60"
+                    }`}
+                  >
+                    {uploadingLogo ? (
+                      <div className="flex flex-col items-center justify-center space-y-2 py-1">
+                        <Loader2 className="h-5 w-5 text-[#0d2137] animate-spin" />
+                        <p className="text-[12px] font-semibold text-gray-700">Uploading logo to ImageKit...</p>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center space-y-1 py-1">
+                        <Upload className="h-5 w-5 text-gray-400" />
+                        <p className="text-[12px] font-semibold text-gray-800">
+                          Click to select logo file from computer
+                        </p>
+                        <p className="text-[10px] text-gray-400">PNG, JPG, WEBP, AVIF (Max 5MB)</p>
+                      </div>
+                    )}
+                  </div>
                 )}
+
+                <div className="mt-2 flex items-center gap-2">
+                  <span className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Or enter URL:</span>
+                  <input
+                    type="text"
+                    name="logoUrl"
+                    placeholder="https://example.com/logo.png"
+                    value={formData.logoUrl}
+                    onChange={handleInputChange}
+                    disabled={submitting || uploadingLogo}
+                    className="flex-1 border border-gray-300 px-2.5 py-1 text-[12px] text-gray-800 placeholder-gray-400 rounded-sm focus:border-[#4a6d98] focus:outline-none"
+                  />
+                </div>
               </div>
 
               {/* Description */}
@@ -467,14 +554,14 @@ export const AdminBrands = () => {
                 <button
                   type="button"
                   onClick={handleCloseModal}
-                  disabled={submitting}
+                  disabled={submitting || uploadingLogo}
                   className="px-4 py-2 text-[12px] font-semibold text-gray-600 hover:bg-gray-100 transition-colors rounded-sm cursor-pointer disabled:opacity-50"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  disabled={submitting}
+                  disabled={submitting || uploadingLogo}
                   className="flex items-center gap-2 bg-[#0d2137] text-white px-5 py-2 text-[12px] font-bold uppercase tracking-wider hover:bg-[#1a3a5c] transition-colors rounded-sm cursor-pointer disabled:opacity-50"
                 >
                   {submitting ? (

@@ -16,14 +16,18 @@ const SORT_OPTIONS = [
 const GENDER_TABS = ["All", "Women", "Men", "Unisex"];
 
 const FALLBACK_PRODUCTS = [
-  { _id: "f1", name: "Ruched Off-The-Shoulder Bodysuit", gender: "Women", price: 2049, discount: 21, images: [{ url: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=600" }, { url: "https://images.unsplash.com/photo-1485462537746-965f33f7f6a7?auto=format&fit=crop&q=80&w=600" }] },
-  { _id: "f2", name: "Tied Short Sleeve Bodysuit", gender: "Women", price: 2080, discount: 23, images: [{ url: "https://images.unsplash.com/photo-1594938298603-c8148c4b4d4f?auto=format&fit=crop&q=80&w=600" }, { url: "https://images.unsplash.com/photo-1469334031218-e382a71b716b?auto=format&fit=crop&q=80&w=600" }] },
-  { _id: "f3", name: "Casual Frayed Wide-Leg Jeans", gender: "Women", price: 3320, discount: 16, images: [{ url: "https://images.unsplash.com/photo-1581338834647-b0fb40704e21?auto=format&fit=crop&q=80&w=600" }, { url: "https://images.unsplash.com/photo-1434389677669-e08b4cac3105?auto=format&fit=crop&q=80&w=600" }] },
-  { _id: "f4", name: "Vintage Wide Leg Denim Pants", gender: "Women", price: 3980, discount: 0, images: [{ url: "https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&q=80&w=600" }, { url: "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&q=80&w=600" }] },
-  { _id: "f5", name: "Floral Lace Midi Dress", gender: "Women", price: 4250, discount: 30, images: [{ url: "https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&q=80&w=600" }, { url: "https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&q=80&w=600" }] },
-  { _id: "f6", name: "High Waisted Cargo Trousers", gender: "Women", price: 2890, discount: 18, images: [{ url: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=600" }, { url: "https://images.unsplash.com/photo-1485462537746-965f33f7f6a7?auto=format&fit=crop&q=80&w=600" }] },
-  { _id: "f7", name: "Light Blue Slim-Fit Shirt", gender: "Men", price: 2380, discount: 27, images: [{ url: "https://images.unsplash.com/photo-1617137984095-74e4e5e3613f?auto=format&fit=crop&q=80&w=600" }, { url: "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&q=80&w=600" }] },
-  { _id: "f8", name: "Slim Chino Stretch Trousers", gender: "Men", price: 2799, discount: 15, images: [{ url: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=600" }, { url: "https://images.unsplash.com/photo-1488161628813-04466f872be2?auto=format&fit=crop&q=80&w=600" }] },
+  { _id: "f1", name: "Ruched Off-The-Shoulder Bodysuit Top", gender: "Women", price: 2049, discount: 21, images: [{ url: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=600" }, { url: "https://images.unsplash.com/photo-1485462537746-965f33f7f6a7?auto=format&fit=crop&q=80&w=600" }] },
+  { _id: "f2", name: "Women's Satin Cowl-Neck Sleeveless Cami Top", gender: "Women", price: 1890, discount: 25, images: [{ url: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=600" }] },
+  { _id: "f3", name: "Women's Lace Trim Corset Bustier Crop Top", gender: "Women", price: 2150, discount: 30, images: [{ url: "https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&q=80&w=600" }] },
+  { _id: "f4", name: "Women's Ribbed Square-Neck Knit Tank Top", gender: "Women", price: 1450, discount: 20, images: [{ url: "https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&q=80&w=600" }] },
+  { _id: "f5", name: "Women's Draped One-Shoulder Asymmetric Top", gender: "Women", price: 2350, discount: 18, images: [{ url: "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&q=80&w=600" }] },
+  { _id: "f6", name: "Casual Frayed Wide-Leg Jeans", gender: "Women", price: 3320, discount: 16, images: [{ url: "https://images.unsplash.com/photo-1581338834647-b0fb40704e21?auto=format&fit=crop&q=80&w=600" }, { url: "https://images.unsplash.com/photo-1434389677669-e08b4cac3105?auto=format&fit=crop&q=80&w=600" }] },
+  { _id: "f7", name: "Vintage Wide Leg Denim Pants", gender: "Women", price: 3980, discount: 0, images: [{ url: "https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&q=80&w=600" }, { url: "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&q=80&w=600" }] },
+  { _id: "f8", name: "Floral Lace Midi Dress", gender: "Women", price: 4250, discount: 30, images: [{ url: "https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&q=80&w=600" }, { url: "https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&q=80&w=600" }] },
+  { _id: "f9", name: "Men's Light Blue Solid Slim-Fit Oxford Shirt", gender: "Men", price: 2380, discount: 18, images: [{ url: "https://images.unsplash.com/photo-1593030761757-71fae45fa0e7?auto=format&fit=crop&q=80&w=600" }, { url: "https://images.unsplash.com/photo-1617137984095-74e4e5e3613f?auto=format&fit=crop&q=80&w=600" }] },
+  { _id: "f10", name: "Men's Classic Slim-Fit Crisp White Oxford Shirt", gender: "Men", price: 2499, discount: 20, images: [{ url: "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?auto=format&fit=crop&q=80&w=600" }] },
+  { _id: "f11", name: "Women's Ivory Silk Satin Button-Down Shirt", gender: "Women", price: 3250, discount: 25, images: [{ url: "https://images.unsplash.com/photo-1598554747436-c9293d6a588f?auto=format&fit=crop&q=80&w=600" }] },
+  { _id: "f12", name: "Women's Blue Pinstripe Oversized Poplin Shirt", gender: "Women", price: 2650, discount: 18, images: [{ url: "https://images.unsplash.com/photo-1551803091-e20673f15770?auto=format&fit=crop&q=80&w=600" }] },
 ];
 
 /* ── grid stagger container ── */
@@ -39,6 +43,8 @@ const itemVariants = {
 export const ProductsPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const genderParam = searchParams.get("gender") || "";
+  const categoryParam = searchParams.get("category") || "";
+  const saleParam = searchParams.get("sale") || "";
   const sortParam  = searchParams.get("sort")   || "featured";
   const searchParam = searchParams.get("search") || "";
 
@@ -50,13 +56,24 @@ export const ProductsPage = () => {
   const [search, setSearch] = useState(searchParam);
   const [searchInput, setSearchInput] = useState(searchParam);
 
+  /* Sync local state when URL params change */
+  useEffect(() => {
+    setActiveGender(genderParam || "All");
+    setSearch(searchParam);
+    setSearchInput(searchParam);
+    if (sortParam) {
+      const match = SORT_OPTIONS.find(s => s.value === sortParam);
+      if (match) setActiveSort(match);
+    }
+  }, [genderParam, searchParam, sortParam]);
+
   /* page title derived from URL */
   const pageTitle = (() => {
     if (searchParam) return `Search: "${searchParam}"`;
-    if (genderParam === "Women") return "WOMEN";
-    if (genderParam === "Men") return "MEN";
-    const s = searchParams.get("sale");
-    if (s) return "SALE";
+    if (categoryParam) return categoryParam.toUpperCase().replace("-", " ");
+    if (saleParam) return "HOT SALE & CLEARANCE";
+    if (genderParam === "Women") return "WOMEN'S COLLECTION";
+    if (genderParam === "Men") return "MEN'S COLLECTION";
     const sort = searchParams.get("sort");
     if (sort === "newest") return "NEW ARRIVALS";
     return "ALL PRODUCTS";
@@ -64,22 +81,79 @@ export const ProductsPage = () => {
 
   const fetchProducts = useCallback(() => {
     setLoading(true);
-    const params = {};
+    const params = { limit: 100 };
     if (search) params.search = search;
-    if (activeGender !== "All") params.gender = activeGender;
+    if (genderParam) params.gender = genderParam;
+    if (categoryParam) params.category = categoryParam;
+
+    // Map frontend sort value → backend sort field
+    const sortMap = {
+      featured:    "-isFeatured",
+      newest:      "-createdAt",
+      price_asc:   "price",
+      price_desc:  "-price",
+      bestselling: "-createdAt",
+    };
+    params.sort = sortMap[activeSort.value] || "-createdAt";
 
     productService.getAll(params)
       .then(res => {
-        let data = res.data?.products || res.products || FALLBACK_PRODUCTS;
-        // client-side sort
-        if (activeSort.value === "price_asc") data = [...data].sort((a, b) => a.price - b.price);
-        if (activeSort.value === "price_desc") data = [...data].sort((a, b) => b.price - a.price);
-        if (activeSort.value === "newest") data = [...data].reverse();
+        let data = Array.isArray(res.data)
+          ? res.data
+          : Array.isArray(res.data?.data)
+          ? res.data.data
+          : Array.isArray(res.products)
+          ? res.products
+          : [];
+
+        // Use fallback only when backend returned nothing
+        if (data.length === 0) {
+          data = [...FALLBACK_PRODUCTS];
+          // Apply client-side filters on fallback data
+          if (genderParam) data = data.filter(p => p.gender?.toLowerCase() === genderParam.toLowerCase());
+          if (categoryParam) {
+            const cat = categoryParam.toLowerCase().trim();
+            const catSingular = cat.endsWith("s") ? cat.slice(0, -1) : cat;
+            data = data.filter(p => {
+              const catName = (p.category?.name || "").toLowerCase();
+              const catSlug = (p.category?.slug || p.categorySlug || "").toLowerCase();
+              const pName = (p.name || "").toLowerCase();
+              return catName.includes(cat) || catName.includes(catSingular) ||
+                catSlug.includes(cat) || catSlug.includes(catSingular) ||
+                pName.includes(cat) || pName.includes(catSingular) ||
+                (cat.includes("denim") && (pName.includes("denim") || pName.includes("jean"))) ||
+                (cat.includes("swim") && (pName.includes("swim") || pName.includes("trunk"))) ||
+                (cat.includes("shirt") && (pName.includes("shirt") || pName.includes("oxford")));
+            });
+          }
+        }
+
+        if (saleParam) data = data.filter(p => p.discount && p.discount > 0);
+        if (search) {
+          const q = search.toLowerCase();
+          data = data.filter(p => p.name?.toLowerCase().includes(q));
+        }
+
         setProducts(data);
       })
-      .catch(() => setProducts(FALLBACK_PRODUCTS))
+      .catch(() => {
+        let data = [...FALLBACK_PRODUCTS];
+        if (genderParam) data = data.filter(p => p.gender === genderParam);
+        if (categoryParam) {
+          const cat = categoryParam.toLowerCase().trim();
+          const catSingular = cat.endsWith("s") ? cat.slice(0, -1) : cat;
+          data = data.filter(p =>
+            p.name?.toLowerCase().includes(cat) ||
+            p.name?.toLowerCase().includes(catSingular) ||
+            (cat.includes("shirt") && p.name?.toLowerCase().includes("shirt")) ||
+            cat === "denim"
+          );
+        }
+        if (saleParam) data = data.filter(p => p.discount > 0);
+        setProducts(data);
+      })
       .finally(() => setLoading(false));
-  }, [search, activeGender, activeSort]);
+  }, [search, genderParam, categoryParam, saleParam, activeSort]);
 
   useEffect(() => { fetchProducts(); }, [fetchProducts]);
 
@@ -144,24 +218,7 @@ export const ProductsPage = () => {
 
       <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-10 py-8">
         {/* ── Controls Row ── */}
-        <div className="flex flex-col gap-4 mb-8 sm:flex-row sm:items-center sm:justify-between">
-          {/* Gender tabs */}
-          <div className="flex flex-wrap items-center gap-1.5">
-            {GENDER_TABS.map(g => (
-              <motion.button
-                key={g}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => handleGenderTab(g)}
-                className={`px-4 py-1.5 rounded-full text-[11px] font-semibold tracking-wider border transition-all cursor-pointer ${
-                  activeGender === g
-                    ? "bg-[#0d2137] text-white border-[#0d2137]"
-                    : "bg-white text-gray-600 border-gray-300 hover:border-gray-500"
-                }`}
-              >
-                {g.toUpperCase()}
-              </motion.button>
-            ))}
-          </div>
+        <div className="flex flex-col gap-4 mb-8 sm:flex-row sm:items-center sm:justify-end">
 
           <div className="flex items-center gap-3">
             {/* Search */}

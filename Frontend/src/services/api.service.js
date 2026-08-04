@@ -5,6 +5,8 @@ export { categoryService } from "./category.service";
 export { brandService } from "./brand.service";
 export { couponService } from "./coupon.service";
 export { uploadService } from "./upload.service";
+export { cartService } from "./cart.service";
+export { wishlistService } from "./wishlist.service";
 
 export const productService = {
   getAll: async (params) => {
@@ -29,6 +31,29 @@ export const productService = {
   },
 };
 
+export const addressService = {
+  getAll: async () => {
+    const response = await apiClient.get(ENDPOINTS.ADDRESS.LIST);
+    return response.data;
+  },
+  create: async (data) => {
+    const response = await apiClient.post(ENDPOINTS.ADDRESS.CREATE, data);
+    return response.data;
+  },
+  update: async (id, data) => {
+    const response = await apiClient.patch(ENDPOINTS.ADDRESS.UPDATE(id), data);
+    return response.data;
+  },
+  delete: async (id) => {
+    const response = await apiClient.delete(ENDPOINTS.ADDRESS.DELETE(id));
+    return response.data;
+  },
+  setDefault: async (id) => {
+    const response = await apiClient.patch(ENDPOINTS.ADDRESS.SET_DEFAULT(id));
+    return response.data;
+  },
+};
+
 export const orderService = {
   getMyOrders: async (params) => {
     const response = await apiClient.get(ENDPOINTS.ORDERS.MY_ORDERS, { params });
@@ -38,8 +63,16 @@ export const orderService = {
     const response = await apiClient.post(ENDPOINTS.ORDERS.PLACE, orderData);
     return response.data;
   },
+  getById: async (id) => {
+    const response = await apiClient.get(ENDPOINTS.ORDERS.DETAIL(id));
+    return response.data;
+  },
   updateStatus: async (id, statusData) => {
     const response = await apiClient.patch(ENDPOINTS.ORDERS.UPDATE_STATUS(id), statusData);
+    return response.data;
+  },
+  cancelOrder: async (id, reason) => {
+    const response = await apiClient.patch(ENDPOINTS.ORDERS.CANCEL(id), { reason });
     return response.data;
   },
 };

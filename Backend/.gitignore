@@ -1,3 +1,15 @@
-**/.env
-/node_modules
-**API_DOCUMENTATION.md
+# Dependencies
+node_modules/
+
+# Environment Secrets & Utility Scripts
+.env
+.env.*
+!.env.example
+createAdmin.js
+seedProducts.js
+
+# Uploads & Logs
+src/uploads/*
+!src/uploads/.gitkeep
+*.log
+*seedProducts

@@ -28,41 +28,47 @@ const ALIVE = { deletedAt: null };
  * @throws {ApiError} 404 if category/brand not found, 409 if slug is taken.
  */
 const createProduct = async (data) => {
-    // ── 1. Validate Category ──────────────────────────────────────────────────
-    const category = await Category.findOne({ _id: data.category, deletedAt: null });
-    if (!category) {
-        throw new ApiError(404, "Category not found");
+    const mongoose = require("mongoose");
+
+    // ── 1. Validate / Resolve Category ────────────────────────────────────────
+    let categoryDoc = null;
+    if (data.category && mongoose.Types.ObjectId.isValid(data.category)) {
+        categoryDoc = await Category.findOne({ _id: data.category, deletedAt: null });
     }
-
-    // ── 2. Validate SubCategory (if provided) ─────────────────────────────────
-    if (data.subCategory) {
-        const subCategory = await Category.findOne({ _id: data.subCategory, deletedAt: null });
-        if (!subCategory) {
-            throw new ApiError(404, "Sub-category not found");
-        }
+    if (!categoryDoc && typeof data.category === "string" && data.category.trim()) {
+        const catSearch = data.category.trim().toLowerCase();
+        categoryDoc = await Category.findOne({
+            $or: [{ slug: catSearch }, { name: new RegExp(`^${catSearch}$`, "i") }],
+            deletedAt: null
+        });
     }
-
-    // ── 3. Validate Brand ─────────────────────────────────────────────────────
-    // TODO: Uncomment once Brand model is built
-    // const brand = await Brand.findById(data.brand);
-    // if (!brand) throw new ApiError(404, "Brand not found");
-
-    // ── 4. Enforce Slug uniqueness ────────────────────────────────────────────
-    // The schema has a unique index on slug, but checking here gives a cleaner
-    // 409 error instead of a raw MongoDB duplicate-key crash (error code 11000).
-    const slugTaken = await Product.exists({ slug: data.slug });
-    if (slugTaken) {
-        throw new ApiError(409, "A product with this slug already exists");
+    if (!categoryDoc) {
+        categoryDoc = await Category.findOne({ deletedAt: null });
     }
+    if (!categoryDoc) {
+        categoryDoc = await Category.create({
+            name: data.category || "General",
+            slug: (data.category || "general").toLowerCase().replace(/[^a-z0-9]/g, "-"),
+            status: "active"
+        });
+    }
+    data.category = categoryDoc._id;
 
-    // ── 5. Create & return (populated) ──────────────────────────────────────
-    // Re-fetch with populate so the controller/frontend gets complete data
-    // immediately without needing a second GET request.
+    // ── 2. Ensure Unique Slug ──────────────────────────────────────────────────
+    let baseSlug = data.slug || data.name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+    let targetSlug = baseSlug;
+    let counter = 1;
+    while (await Product.exists({ slug: targetSlug })) {
+        targetSlug = `${baseSlug}-${counter}`;
+        counter++;
+    }
+    data.slug = targetSlug;
+
+    // ── 3. Create & Return ─────────────────────────────────────────────────────
     const product = await Product.create(data);
     return Product.findById(product._id)
-        .populate("category",    "name slug")
+        .populate("category", "name slug")
         .populate("subCategory", "name slug");
-        // TODO: .populate("brand", "name logo") — uncomment once Brand model exists
 };
 
 // ─── getAllProducts ───────────────────────────────────────────────────────────
@@ -91,40 +97,74 @@ const getAllProducts = async (filters = {}) => {
     const query = { ...ALIVE };
 
     // ── Full-text search ──────────────────────────────────────────────────────
-    // Uses the compound text index on name + description + tags.
-    // Weighted: name(10) > tags(5) > description(1)
     if (search) {
         query.$text = { $search: search };
     }
 
-    // ── Filters ───────────────────────────────────────────────────────────────
-    if (category)   query.category   = category;
-    if (brand)      query.brand       = brand;
-    if (gender)     query.gender      = gender;
-    if (status)     query.status      = status;
+    // ── Category filter ───────────────────────────────────────────────────────
+    if (category) {
+        const mongoose = require("mongoose");
+        if (mongoose.Types.ObjectId.isValid(category)) {
+            query.category = category;
+        } else {
+            const rawCat  = category.toLowerCase().trim();
+            // Build multiple slug variations to maximise slug match chances
+            const singularCat = rawCat.endsWith("s") ? rawCat.slice(0, -1) : rawCat;
+            const pluralCat   = rawCat.endsWith("s") ? rawCat : rawCat + "s";
+
+            const catDoc = await Category.findOne({
+                $or: [
+                    { slug: rawCat },
+                    { slug: singularCat },
+                    { slug: pluralCat },
+                    { name: new RegExp(`^${rawCat}$`, "i") },
+                    { name: new RegExp(`^${singularCat}$`, "i") },
+                    { name: new RegExp(rawCat, "i") },
+                ],
+                deletedAt: null
+            });
+
+            if (catDoc) {
+                query.category = catDoc._id;
+            } else {
+                // Fallback: name/description fuzzy match — don't set query.category so no cast error
+                // Use $or only when $text is NOT already set to avoid index conflicts
+                if (!query.$text) {
+                    query.$or = [
+                        { name: new RegExp(singularCat, "i") },
+                        { description: new RegExp(singularCat, "i") },
+                        { tags: new RegExp(singularCat, "i") },
+                    ];
+                }
+            }
+        }
+    }
+
+    if (brand)      query.brand  = brand;
+    if (gender)     query.gender = new RegExp(`^${gender}$`, "i");
+    if (status)     query.status = status;
     if (isFeatured !== undefined) {
         query.isFeatured = isFeatured === "true" || isFeatured === true;
     }
 
     // ── Pagination ────────────────────────────────────────────────────────────
     const pageNum  = Math.max(1, parseInt(page,  10));
-    const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10)));
+    const limitNum = Math.min(200, Math.max(1, parseInt(limit, 10))); // raised cap to 200
     const skip     = (pageNum - 1) * limitNum;
 
     // ── Sort ──────────────────────────────────────────────────────────────────
-    // Accepted values: price, -price, createdAt, -createdAt, averageRating, -averageRating
     const allowedSorts = new Set([
         "price", "-price",
         "createdAt", "-createdAt",
         "averageRating", "-averageRating",
-        "name", "-name"
+        "name", "-name",
+        "isFeatured", "-isFeatured",  // allow featured sort from frontend
     ]);
     const sortField = allowedSorts.has(sort) ? sort : "-createdAt";
 
     const [products, total] = await Promise.all([
         Product.find(query)
             .populate("category", "name slug")
-            // TODO: .populate("brand", "name logo") — uncomment once Brand model exists
             .sort(sortField)
             .skip(skip)
             .limit(limitNum)

@@ -1,9 +1,14 @@
+/**
+ * GuestRoute — redirects authenticated users away from auth pages.
+ * If already logged in, visiting /auth/login or /auth/register
+ * redirects to home (or /admin/dashboard for admins).
+ */
 import React from "react";
 import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
-export const ProtectedRoute = ({ requireAdmin = false }) => {
-  const { user, loading } = useAuth();
+export const GuestRoute = () => {
+  const { user, loading, isAdmin } = useAuth();
 
   if (loading) {
     return (
@@ -16,12 +21,8 @@ export const ProtectedRoute = ({ requireAdmin = false }) => {
     );
   }
 
-  if (!user) {
-    return <Navigate to="/auth/login" replace />;
-  }
-
-  if (requireAdmin && user.role !== "admin") {
-    return <Navigate to="/" replace />;
+  if (user) {
+    return <Navigate to={isAdmin ? "/admin/dashboard" : "/"} replace />;
   }
 
   return <Outlet />;

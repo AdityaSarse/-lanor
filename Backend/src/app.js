@@ -1,4 +1,5 @@
 const express = require("express");
+const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const authRouter     = require("./routes/auth.routes");
 const productRouter  = require("./routes/product.routes");
@@ -16,6 +17,31 @@ const uploadRouter       = require("./routes/upload.routes");
 const errorHandler       = require("./middelwares/error.middleware");
 
 const app = express();
+
+// ── CORS ──────────────────────────────────────────────────────────────────────
+// Must be FIRST — before body parsers and routes.
+// credentials:true is required so the browser sends cookies (refreshToken).
+const allowedOrigins = [
+  process.env.CORS_ORIGIN || "http://localhost:5173",
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+];
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // Allow requests with no origin (curl, Postman, mobile apps)
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error(`CORS: origin '${origin}' not allowed`));
+      }
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
 
 app.use(express.json());
 app.use(cookieParser());

@@ -11,10 +11,37 @@ const FALLBACK_PRODUCTS = [
   { _id: "4", name: "Men's Colorblock Geometric",     gender: "Men",   price: 1590, discount: 20, status: "inactive" },
 ];
 
+const DEFAULT_CATEGORIES = [
+  { _id: "tops", name: "Tops & Tees" },
+  { _id: "dresses", name: "Dresses" },
+  { _id: "bottoms", name: "Bottoms" },
+  { _id: "bodysuits", name: "Bodysuits" },
+  { _id: "jumpsuits", name: "Jumpsuits" },
+  { _id: "lingerie", name: "Lingerie Sets" },
+  { _id: "bras", name: "Bras" },
+  { _id: "panties", name: "Panties" },
+  { _id: "denim", name: "Denim" },
+  { _id: "shirts", name: "Shirts" },
+  { _id: "swimwear", name: "Swimwear" },
+  { _id: "tshirts", name: "T-Shirts" },
+  { _id: "shorts", name: "Shorts" },
+  { _id: "jeans", name: "Jeans" },
+  { _id: "pants", name: "Pants" },
+  { _id: "accessories", name: "Accessories" },
+];
+
+const DEFAULT_BRANDS = [
+  { _id: "brand_elanor", name: "Élanor Essentials" },
+  { _id: "brand_luna", name: "Luna Luxe" },
+  { _id: "brand_veloura", name: "Veloura" },
+  { _id: "brand_silk", name: "Silk & Sage" },
+  { _id: "brand_noir", name: "Noir Belle" },
+];
+
 export const AdminProducts = () => {
   const [products, setProducts] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [brands, setBrands] = useState([]);
+  const [categories, setCategories] = useState(DEFAULT_CATEGORIES);
+  const [brands, setBrands] = useState(DEFAULT_BRANDS);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
 
@@ -77,14 +104,20 @@ export const AdminProducts = () => {
       ]);
       if (catRes.status === "fulfilled") {
         const catList = catRes.value?.data?.categories ?? catRes.value?.categories ?? catRes.value?.data ?? [];
-        setCategories(catList);
+        setCategories(catList.length ? catList : DEFAULT_CATEGORIES);
+      } else {
+        setCategories(DEFAULT_CATEGORIES);
       }
       if (brandRes.status === "fulfilled") {
         const brandList = brandRes.value?.data?.brands ?? brandRes.value?.brands ?? brandRes.value?.data ?? [];
-        setBrands(brandList);
+        setBrands(brandList.length ? brandList : DEFAULT_BRANDS);
+      } else {
+        setBrands(DEFAULT_BRANDS);
       }
     } catch (e) {
       console.error("Failed loading category/brand options:", e);
+      setCategories(DEFAULT_CATEGORIES);
+      setBrands(DEFAULT_BRANDS);
     }
   };
 
@@ -114,13 +147,11 @@ export const AdminProducts = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
     if (!file.type.startsWith("image/")) {
       toast.error("Please select a valid image file (JPG, PNG, WEBP, etc.)");
       return;
     }
 
-    // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
       toast.error("Image file size must be less than 5MB");
       return;
@@ -131,7 +162,6 @@ export const AdminProducts = () => {
 
     try {
       const response = await uploadService.uploadSingle(file, "/products");
-      // Extract URL from standard ApiResponse structure
       const uploadedUrl = response?.data?.url || response?.url || response?.data?.result?.url || "";
 
       if (uploadedUrl) {
@@ -146,7 +176,6 @@ export const AdminProducts = () => {
       toast.error(msg);
     } finally {
       setUploadingImage(false);
-      // Reset input value so re-selecting the same file works
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
@@ -257,7 +286,7 @@ export const AdminProducts = () => {
 
       toast.success("Product created successfully!");
       handleCloseModal();
-      await fetchProducts(); // Refresh in place
+      await fetchProducts();
     } catch (err) {
       console.error("Error creating product:", err);
       const apiMsg = err.response?.data?.message || err.response?.data?.error || err.message || "Failed to create product";
@@ -718,7 +747,7 @@ export const AdminProducts = () => {
                   value={formData.status}
                   onChange={handleInputChange}
                   disabled={submitting}
-                  className="w-full border border-gray-300 bg-white px-3 py-2 text-[13px] text-gray-800 rounded-sm focus:border-[#4a6d98] focus:outline-none"
+                  className="w-full border border-gray-300 bg-[#ffffff] px-3 py-2 text-[13px] text-gray-800 rounded-sm focus:border-[#4a6d98] focus:outline-none"
                 >
                   <option value="active">Active</option>
                   <option value="inactive">Inactive / Draft</option>

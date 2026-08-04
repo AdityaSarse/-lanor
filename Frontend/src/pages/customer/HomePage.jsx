@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { ProductCard } from "../../components/customer/ProductCard";
 import { productService } from "../../services/api.service";
-import linenSectionImg from "../../assets/LinenSection.png";
 import heroImg from "../../assets/HEROIMAGE.png";
 import img1st from "../../assets/1st.png";
 import img2nd from "../../assets/2nd.png";
@@ -11,22 +10,29 @@ import bgHero2 from "../../assets/BackgroundHero2.png";
 import img3rd from "../../assets/3rd.png";
 import img4th from "../../assets/4th.png";
 import bgB2 from "../../assets/B2.png";
+import group5Img from "../../assets/Group 5.png";
 
-
-
-/* ─── Fallback product datasets ──────────────────────────────────────── */
+/* ─── Fallback product datasets (8 items each for 2 rows of 4 columns) ───── */
 const FALLBACK_WOMEN = [
   { _id: "w1", name: "Full-Cup U-Back Adjustable Bra", gender: "Women", price: 1529, discount: 40, images: [{ url: "https://images.unsplash.com/photo-1583744946564-b52d01a7f418?auto=format&fit=crop&q=80&w=600" }] },
   { _id: "w2", name: "Detachable-Strap Adjustable Plus Bra", gender: "Women", price: 1579, discount: 38, images: [{ url: "https://images.unsplash.com/photo-1594938298603-c8148c4b4d4f?auto=format&fit=crop&q=80&w=600" }] },
   { _id: "w3", name: "Leaf Embroidered Shaping Bra", gender: "Women", price: 1879, discount: 42, images: [{ url: "https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&q=80&w=600" }] },
   { _id: "w4", name: "Dream Lace Fantasy Push-Up Bra", gender: "Women", price: 1920, discount: 37, images: [{ url: "https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&q=80&w=600" }] },
+  { _id: "w5", name: "Silk Satin Nightdress & Robe Set", gender: "Women", price: 2490, discount: 25, images: [{ url: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=600" }] },
+  { _id: "w6", name: "Contour Shaping Seamless Bodysuit", gender: "Women", price: 2100, discount: 30, images: [{ url: "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&q=80&w=600" }] },
+  { _id: "w7", name: "Wireless Soft Comfort Bralette", gender: "Women", price: 1350, discount: 20, images: [{ url: "https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&q=80&w=600" }] },
+  { _id: "w8", name: "Floral Lace Premium Bustier Corset", gender: "Women", price: 2799, discount: 35, images: [{ url: "https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&q=80&w=600" }] },
 ];
 
 const FALLBACK_WOMEN_SALE = [
   { _id: "ws1", name: "Floral Lace Supportive Bra", gender: "Women", price: 1879, discount: 27, images: [{ url: "https://images.unsplash.com/photo-1485462537746-965f33f7f6a7?auto=format&fit=crop&q=80&w=600" }] },
   { _id: "ws2", name: "Non-Padded Full-Coverage Lace Bra", gender: "Women", price: 1550, discount: 30, images: [{ url: "https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&q=80&w=600" }] },
   { _id: "ws3", name: "Seamless Adjustable Plus-Size Bra", gender: "Women", price: 1690, discount: 48, images: [{ url: "https://images.unsplash.com/photo-1434389677669-e08b4cac3105?auto=format&fit=crop&q=80&w=600" }] },
-  { _id: "ws4", name: "Full-Cup Lace Bra", gender: "Women", price: 1590, discount: 35, images: [{ url: "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&q=80&w=600" }] },
+  { _id: "ws4", name: "Full-Cup Lace Trimmed Bra", gender: "Women", price: 1590, discount: 35, images: [{ url: "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&q=80&w=600" }] },
+  { _id: "ws5", name: "Satin Cami & Shorts Loungewear Set", gender: "Women", price: 1999, discount: 40, images: [{ url: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=600" }] },
+  { _id: "ws6", name: "High-Waist Tummy Control Shapewear", gender: "Women", price: 1450, discount: 45, images: [{ url: "https://images.unsplash.com/photo-1583744946564-b52d01a7f418?auto=format&fit=crop&q=80&w=600" }] },
+  { _id: "ws7", name: "Velvet Plush Robe & Chemise Set", gender: "Women", price: 3200, discount: 50, images: [{ url: "https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&q=80&w=600" }] },
+  { _id: "ws8", name: "Deep V Plunge Lace Teddy", gender: "Women", price: 1750, discount: 38, images: [{ url: "https://images.unsplash.com/photo-1594938298603-c8148c4b4d4f?auto=format&fit=crop&q=80&w=600" }] },
 ];
 
 const FALLBACK_MEN = [
@@ -34,6 +40,10 @@ const FALLBACK_MEN = [
   { _id: "m2", name: "Men's Athletic Performance Textured", gender: "Men", price: 1830, discount: 28, images: [{ url: "https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?auto=format&fit=crop&q=80&w=600" }] },
   { _id: "m3", name: "Men's Athletic Performance Solid", gender: "Men", price: 1640, discount: 38, images: [{ url: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=600" }] },
   { _id: "m4", name: "Men's Colorblock Geometric Waistband", gender: "Men", price: 1590, discount: 20, images: [{ url: "https://images.unsplash.com/photo-1488161628813-04466f872be2?auto=format&fit=crop&q=80&w=600" }] },
+  { _id: "m5", name: "Men's Microfiber Seamless Briefs (3-Pack)", gender: "Men", price: 1499, discount: 30, images: [{ url: "https://images.unsplash.com/photo-1593030761757-71fae45fa0e7?auto=format&fit=crop&q=80&w=600" }] },
+  { _id: "m6", name: "Men's Premium Modal Boxers (2-Pack)", gender: "Men", price: 1699, discount: 25, images: [{ url: "https://images.unsplash.com/photo-1617137984095-74e4e5e3613f?auto=format&fit=crop&q=80&w=600" }] },
+  { _id: "m7", name: "Men's Moisture-Wicking Sport Trunks", gender: "Men", price: 1390, discount: 35, images: [{ url: "https://images.unsplash.com/photo-1552902865-b72c031ac5ea?auto=format&fit=crop&q=80&w=600" }] },
+  { _id: "m8", name: "Men's Luxury Cotton Stretch Lounge Pants", gender: "Men", price: 2199, discount: 40, images: [{ url: "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&q=80&w=600" }] },
 ];
 
 const FALLBACK_MEN_NEW = [
@@ -41,9 +51,13 @@ const FALLBACK_MEN_NEW = [
   { _id: "mn2", name: "Light Grey Solid Skinny Man's Shirt", gender: "Men", price: 2599, discount: 16, images: [{ url: "https://images.unsplash.com/photo-1617137984095-74e4e5e3613f?auto=format&fit=crop&q=80&w=600" }] },
   { _id: "mn3", name: "Dusty Pink Slim-Fit Cotton Man's Shirt", gender: "Men", price: 2200, discount: 10, images: [{ url: "https://images.unsplash.com/photo-1552902865-b72c031ac5ea?auto=format&fit=crop&q=80&w=600" }] },
   { _id: "mn4", name: "Light Teal Ultra Skinny Cotton Shirt", gender: "Men", price: 2550, discount: 24, images: [{ url: "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&q=80&w=600" }] },
+  { _id: "mn5", name: "Men's Charcoal Ribbed Tank (2-Pack)", gender: "Men", price: 1290, discount: 15, images: [{ url: "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?auto=format&fit=crop&q=80&w=600" }] },
+  { _id: "mn6", name: "Men's Soft Bamboo Sleep Shorts", gender: "Men", price: 1450, discount: 20, images: [{ url: "https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?auto=format&fit=crop&q=80&w=600" }] },
+  { _id: "mn7", name: "Men's Seamless Thermal Innerwear Top", gender: "Men", price: 1890, discount: 22, images: [{ url: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=600" }] },
+  { _id: "mn8", name: "Men's Classic Oxford Cotton Pajama Set", gender: "Men", price: 2899, discount: 30, images: [{ url: "https://images.unsplash.com/photo-1488161628813-04466f872be2?auto=format&fit=crop&q=80&w=600" }] },
 ];
 
-/* ─── Reusable Product Section ──────────────────────────────────────── */
+/* ─── Reusable Product Section (2 Grids / 8 Products) ───────────────────── */
 const ProductSection = ({ title, products, viewAllHref }) => (
   <section className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-10 py-12">
     <div className="flex items-baseline justify-between mb-7">
@@ -57,14 +71,15 @@ const ProductSection = ({ title, products, viewAllHref }) => (
         View All
       </Link>
     </div>
+    {/* 2 Rows Grid: 4 columns x 2 rows = 8 items */}
     <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
-      {products.map((product, i) => (
+      {products.slice(0, 8).map((product, i) => (
         <motion.div
-          key={product._id}
+          key={product._id || i}
           initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.4, delay: i * 0.07 }}
+          transition={{ duration: 0.4, delay: (i % 4) * 0.07 }}
         >
           <ProductCard product={product} />
         </motion.div>
@@ -73,12 +88,12 @@ const ProductSection = ({ title, products, viewAllHref }) => (
   </section>
 );
 
-/* ─── Skeleton loader ────────────────────────────────────────────────── */
+/* ─── Skeleton loader for 8 products ────────────────────────────────────── */
 const ProductSkeleton = () => (
   <section className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-10 py-12">
     <div className="h-6 w-48 bg-gray-200 rounded mb-7 animate-pulse" />
     <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
-      {[1, 2, 3, 4].map((n) => (
+      {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
         <div key={n} className="space-y-2">
           <div className="aspect-[3/4] bg-gray-100 rounded animate-pulse" />
           <div className="h-3 bg-gray-100 rounded animate-pulse w-3/4" />
@@ -99,19 +114,37 @@ export const HomePage = () => {
   const [menNew, setMenNew] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  /* Helper to prioritize DB products and pad with fallbacks only to reach target count */
+  const fillProducts = (dbList, fallbackList, count = 8) => {
+    if (!Array.isArray(dbList)) return fallbackList.slice(0, count);
+    if (dbList.length >= count) return dbList.slice(0, count);
+    if (dbList.length > 0) {
+      const remaining = count - dbList.length;
+      return [...dbList, ...fallbackList.slice(0, remaining)];
+    }
+    return fallbackList.slice(0, count);
+  };
+
   /* Fetch products */
   useEffect(() => {
     const fetchAll = async () => {
       try {
-        const res = await productService.getAll({ limit: 8 });
-        const all = res.data?.products || res.products || [];
-        const women = all.filter((p) => p.gender === "Women");
-        const men = all.filter((p) => p.gender === "Men");
-        setWomenNew(women.slice(0, 4).length ? women.slice(0, 4) : FALLBACK_WOMEN);
-        setWomenSale(women.slice(4, 8).length ? women.slice(4, 8) : FALLBACK_WOMEN_SALE);
-        setMenSale(men.slice(0, 4).length ? men.slice(0, 4) : FALLBACK_MEN);
-        setMenNew(men.slice(4, 8).length ? men.slice(4, 8) : FALLBACK_MEN_NEW);
-      } catch {
+        const res = await productService.getAll({ limit: 50 });
+        const allList = Array.isArray(res.data)
+          ? res.data
+          : Array.isArray(res.data?.data)
+          ? res.data.data
+          : (res.products || []);
+
+        const women = allList.filter((p) => p.gender === "Women" || !p.gender);
+        const men = allList.filter((p) => p.gender === "Men" || p.gender === "Unisex");
+
+        setWomenNew(fillProducts(women.slice(0, 8), FALLBACK_WOMEN));
+        setWomenSale(fillProducts(women.filter(p => p.discount > 0).slice(0, 8), FALLBACK_WOMEN_SALE));
+        setMenSale(fillProducts(men.filter(p => p.discount > 0).slice(0, 8), FALLBACK_MEN));
+        setMenNew(fillProducts(men.slice(0, 8), FALLBACK_MEN_NEW));
+      } catch (err) {
+        console.warn("Using product fallbacks due to API connection state:", err);
         setWomenNew(FALLBACK_WOMEN);
         setWomenSale(FALLBACK_WOMEN_SALE);
         setMenSale(FALLBACK_MEN);
@@ -135,7 +168,6 @@ export const HomePage = () => {
           marginLeft: 'calc(-50vw + 50%)',
         }}
       >
-        {/* Animated background with Ken Burns slow zoom */}
         <motion.div
           initial={{ scale: 1.08, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -149,7 +181,6 @@ export const HomePage = () => {
           }}
         />
 
-        {/* Subtle shimmer sweep overlay — plays once on load */}
         <motion.div
           initial={{ x: '-100%' }}
           animate={{ x: '200%' }}
@@ -160,12 +191,10 @@ export const HomePage = () => {
           }}
         />
 
-        {/* Very subtle gradient vignette at edges */}
         <div className="absolute inset-0 pointer-events-none" style={{
           background: 'linear-gradient(to right, rgba(0,0,0,0.04) 0%, transparent 15%, transparent 85%, rgba(0,0,0,0.04) 100%)',
         }} />
 
-        {/* CTA button overlay — positioned below "The New Blue." text (Vionellae style) */}
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
@@ -199,7 +228,6 @@ export const HomePage = () => {
       ══════════════════════════════════════════════════════════════ */}
       <section className="relative bg-[#f7f7f7] py-8 lg:py-12 overflow-hidden select-none">
         <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-10">
-          {/* SINGLE continuous background container with BackgroundHero2.png */}
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -208,7 +236,6 @@ export const HomePage = () => {
             className="relative w-full overflow-hidden bg-cover bg-center shadow-xl rounded-sm min-h-[300px] sm:min-h-[340px] lg:min-h-[380px] flex flex-col md:flex-row items-stretch"
             style={{ backgroundImage: `url(${bgHero2})` }}
           >
-            {/* Left side: 1st.png */}
             <div className="w-full md:w-[49%] relative flex items-end justify-start p-0 overflow-hidden min-h-[300px] lg:min-h-[380px]">
               <img
                 src={img1st}
@@ -217,9 +244,7 @@ export const HomePage = () => {
               />
             </div>
 
-            {/* Right side: Typography & 2nd.png */}
             <div className="w-full md:w-[49%] relative flex flex-col justify-between p-6 sm:p-8 lg:p-10">
-              {/* Top Typography: TRENDING DENIM DESTINATION STYLE */}
               <div className="relative z-10 text-left pt-2">
                 <span className="block text-xs sm:text-sm font-semibold uppercase tracking-[0.22em] text-[#0d2137]">
                   TRENDING • TIMELESS
@@ -239,7 +264,6 @@ export const HomePage = () => {
                 </p>
               </div>
 
-              {/* Sitting Model (2nd.png) */}
               <div className="relative flex-1 flex items-end justify-center mt-2 overflow-hidden">
                 <img
                   src={img2nd}
@@ -248,7 +272,6 @@ export const HomePage = () => {
                 />
               </div>
 
-              {/* Bottom CTA Button */}
               <div className="mt-4 pt-2 z-10 flex justify-center md:justify-start">
                 <Link
                   to="/products?category=denim"
@@ -263,7 +286,7 @@ export const HomePage = () => {
       </section>
 
       {/* ══════════════════════════════════════════════════════════════
-          3. WOMEN'S NEW
+          4. WOMEN'S NEW (2 Rows Grid = 8 Items)
       ══════════════════════════════════════════════════════════════ */}
       {loading ? (
         <ProductSkeleton />
@@ -276,7 +299,7 @@ export const HomePage = () => {
       )}
 
       {/* ══════════════════════════════════════════════════════════════
-          4. FEATURED EDITORIAL SECTION (WOMEN'S & VINTAGE DENIM)
+          5. FEATURED EDITORIAL SECTION (WOMEN'S & VINTAGE DENIM)
       ══════════════════════════════════════════════════════════════ */}
       <section className="relative bg-[#f7f7f7] py-8 lg:py-12 overflow-hidden select-none">
         <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-10">
@@ -292,7 +315,6 @@ export const HomePage = () => {
             style={{ backgroundImage: `url(${bgB2})` }}
           >
             <div className="flex flex-col md:flex-row justify-between items-stretch gap-4 md:gap-0">
-              {/* Left card: 3rd.png */}
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 whileInView={{ opacity: 1, x: 0 }}
@@ -309,7 +331,6 @@ export const HomePage = () => {
                 </Link>
               </motion.div>
 
-              {/* Right card: 4th.png */}
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 whileInView={{ opacity: 1, x: 0 }}
@@ -331,7 +352,7 @@ export const HomePage = () => {
       </section>
 
       {/* ══════════════════════════════════════════════════════════════
-          5. WOMEN'S HOT SALE
+          6. WOMEN'S HOT SALE (2 Rows Grid = 8 Items)
       ══════════════════════════════════════════════════════════════ */}
       {loading ? (
         <ProductSkeleton />
@@ -345,10 +366,43 @@ export const HomePage = () => {
         </div>
       )}
 
-
+      {/* ══════════════════════════════════════════════════════════════
+          7. MEN'S DENIM FOREVER EDITORIAL (Group 5)
+      ══════════════════════════════════════════════════════════════ */}
+      <section
+        className="relative overflow-hidden select-none my-8 lg:my-12"
+        style={{
+          width: '100vw',
+          marginLeft: 'calc(-50vw + 50%)',
+        }}
+      >
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="relative w-full overflow-hidden bg-white"
+        >
+          <div className="relative w-full">
+            <img
+              src={group5Img}
+              alt="Men's Denim Forever Collection"
+              className="w-full h-auto object-cover select-none block"
+            />
+            <div className="absolute top-[87%] left-[73%] -translate-x-1/2 -translate-y-1/2 z-10">
+              <Link
+                to="/products?gender=Men"
+                className="inline-block bg-[#0d2137] px-6 sm:px-10 py-2 sm:py-3 text-[11px] sm:text-[14px] font-bold uppercase tracking-[0.18em] text-white hover:bg-[#1a3a5c] transition-all duration-300 hover:shadow-[0_4px_20px_rgba(13,33,55,0.4)]"
+              >
+                MEN
+              </Link>
+            </div>
+          </div>
+        </motion.div>
+      </section>
 
       {/* ══════════════════════════════════════════════════════════════
-          7. MEN'S HOT SALE
+          8. MEN'S HOT SALE (2 Rows Grid = 8 Items)
       ══════════════════════════════════════════════════════════════ */}
       {loading ? (
         <ProductSkeleton />
@@ -363,7 +417,7 @@ export const HomePage = () => {
       )}
 
       {/* ══════════════════════════════════════════════════════════════
-          8. MEN'S NEW
+          9. MEN'S NEW (2 Rows Grid = 8 Items)
       ══════════════════════════════════════════════════════════════ */}
       {loading ? (
         <ProductSkeleton />
@@ -376,7 +430,7 @@ export const HomePage = () => {
       )}
 
       {/* ══════════════════════════════════════════════════════════════
-          9. THANKS SECTION
+          10. THANKS SECTION
       ══════════════════════════════════════════════════════════════ */}
       <section className="relative overflow-hidden min-h-[320px]">
         <img
@@ -392,7 +446,6 @@ export const HomePage = () => {
           transition={{ duration: 0.6 }}
           className="relative flex flex-col items-center justify-center min-h-[320px] px-6 py-20 text-center"
         >
-          {/* "THANKS" block text */}
           <div className="mb-8 inline-block border-2 border-white/60 px-6 py-3">
             <span className="text-3xl font-black tracking-[0.2em] text-white uppercase">
               THANKS

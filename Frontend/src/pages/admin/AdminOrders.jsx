@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { AdminHeader } from "../../components/admin/AdminHeader";
 import { orderService } from "../../services/api.service";
 import { Search, Eye, Clock, CheckCircle, XCircle } from "lucide-react";
+import { toast } from "sonner";
 
 /* ─── Fallback data ───────────────────────────────────────────────────────── */
 const FALLBACK_ORDERS = [
@@ -55,14 +56,29 @@ export const AdminOrders = () => {
 
   useEffect(() => {
     orderService
-      .getMyOrders()
+      .getMyOrders({ limit: 200 })
       .then((res) => {
-        const list = res?.data?.orders ?? res?.orders ?? [];
+        const list = Array.isArray(res.data)
+          ? res.data
+          : Array.isArray(res.data?.data)
+          ? res.data.data
+          : (res?.data?.orders ?? res?.orders ?? []);
         setOrders(list.length ? list : FALLBACK_ORDERS);
       })
       .catch(() => setOrders(FALLBACK_ORDERS))
       .finally(() => setLoading(false));
   }, []);
+
+  const handleStatusChange = async (orderId, orderNumber, newStatus) => {
+    try {
+      await orderService.updateStatus(orderId, { status: newStatus });
+      setOrders(prev => prev.map(o => o._id === orderId ? { ...o, orderStatus: newStatus } : o));
+      toast.success(`Order ${orderNumber} → ${newStatus}`);
+    } catch (err) {
+      const msg = err.response?.data?.message || "Status update failed";
+      toast.error(msg);
+    }
+  };
 
   const filtered = orders.filter((o) =>
     o.orderNumber?.toLowerCase().includes(search.toLowerCase()) ||
@@ -161,10 +177,21 @@ export const AdminOrders = () => {
                         <PaymentBadge status={ord.payment?.status ?? "Pending"} />
                       </td>
                       <td className="px-6 py-3.5">
-                        <StatusBadge status={ord.orderStatus} />
+                        <select
+                          value={ord.orderStatus}
+                          onChange={(e) => handleStatusChange(ord._id, ord.orderNumber, e.target.value)}
+                          className="border border-gray-200 bg-white px-2 py-1 text-xs font-semibold text-gray-800 rounded focus:outline-none cursor-pointer"
+                        >
+                          {["Pending", "Confirmed", "Packed", "Shipped", "Out For Delivery", "Delivered", "Cancelled"].map(st => (
+                            <option key={st} value={st}>{st}</option>
+                          ))}
+                        </select>
                       </td>
                       <td className="px-6 py-3.5 text-right">
-                        <button className="p-1.5 text-gray-400 hover:text-[#0d2137] transition-colors cursor-pointer rounded-sm hover:bg-gray-100">
+                        <button
+                          onClick={() => toast.info(`Viewing details for ${ord.orderNumber}`)}
+                          className="p-1.5 text-gray-400 hover:text-[#0d2137] transition-colors cursor-pointer rounded-sm hover:bg-gray-100"
+                        >
                           <Eye className="h-4 w-4" />
                         </button>
                       </td>

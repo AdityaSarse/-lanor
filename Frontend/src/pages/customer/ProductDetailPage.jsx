@@ -101,7 +101,10 @@ export const ProductDetailPage = () => {
   useEffect(() => {
     setLoading(true);
     productService.getById(id)
-      .then(res => setProduct(res.data?.product || res.product || FALLBACK))
+      .then(res => {
+        const prod = res.data?.product || res.data?.data || (res.data?._id ? res.data : null) || res.product;
+        setProduct(prod || FALLBACK);
+      })
       .catch(() => setProduct(FALLBACK))
       .finally(() => setLoading(false));
   }, [id]);

@@ -4,10 +4,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { authService } from "../../services/auth.service";
 import { useAuth } from "../../context/AuthContext";
+import { useCartStore } from "../../store/useCartStore";
 
 export const LoginPage = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
+  const { fetchServerCart } = useCartStore();
 
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
@@ -22,11 +24,17 @@ export const LoginPage = () => {
     setLoading(true);
     try {
       const res = await authService.login(form);
-      const { user, accessToken } = res.data;
+      // Backend returns: { statusCode, data: { user, accessToken, refreshToken }, message }
+      const payload = res?.data ?? res;
+      const user = payload?.user ?? payload;
+      const accessToken = payload?.accessToken;
+      if (!user || !accessToken) throw new Error("Invalid response from server");
       login(user, accessToken);
+      // Sync server cart right after login
+      await fetchServerCart();
       navigate(user.role === "admin" ? "/admin/dashboard" : "/");
     } catch (err) {
-      setError(err.response?.data?.message || "Invalid credentials. Please try again.");
+      setError(err.response?.data?.message || err.message || "Invalid credentials. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -92,11 +100,6 @@ export const LoginPage = () => {
               {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           </div>
-          <div className="flex justify-end mt-1">
-            <button type="button" className="text-[11px] text-[#4a6d98] hover:underline cursor-pointer">
-              Forgot password?
-            </button>
-          </div>
         </div>
 
         <motion.button
@@ -119,3 +122,4 @@ export const LoginPage = () => {
     </div>
   );
 };
+

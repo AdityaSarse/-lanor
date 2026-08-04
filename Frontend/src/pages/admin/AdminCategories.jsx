@@ -1,16 +1,21 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { AdminHeader } from "../../components/admin/AdminHeader";
 import { categoryService } from "../../services/category.service";
-import { Tag, Plus, Search, X, Loader2, AlertCircle, Trash2, Edit } from "lucide-react";
+import { uploadService } from "../../services/upload.service";
+import { Tag, Plus, Search, X, Loader2, AlertCircle, Trash2, Upload, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 
 const FALLBACK_CATEGORIES = [
-  { _id: "1", name: "Bras",             slug: "bras",             productCount: 24, status: "active" },
-  { _id: "2", name: "Briefs",           slug: "briefs",           productCount: 18, status: "active" },
-  { _id: "3", name: "Boxers",           slug: "boxers",           productCount: 12, status: "active" },
-  { _id: "4", name: "Sports",           slug: "sports",           productCount: 9,  status: "active" },
-  { _id: "5", name: "Shapewear",        slug: "shapewear",        productCount: 6,  status: "inactive" },
-  { _id: "6", name: "Thermal Innerwear",slug: "thermal-innerwear",productCount: 3,  status: "inactive" },
+  { _id: "1", name: "Bras",                 slug: "bras",                 productCount: 24, status: "active" },
+  { _id: "2", name: "Briefs",               slug: "briefs",               productCount: 18, status: "active" },
+  { _id: "3", name: "Sleepwear",            slug: "sleepwear",            productCount: 15, status: "active" },
+  { _id: "4", name: "Loungewear",           slug: "loungewear",           productCount: 12, status: "active" },
+  { _id: "5", name: "Shapewear",            slug: "shapewear",            productCount: 9,  status: "active" },
+  { _id: "6", name: "Swimwear",             slug: "swimwear",             productCount: 8,  status: "active" },
+  { _id: "7", name: "Activewear",           slug: "activewear",           productCount: 14, status: "active" },
+  { _id: "8", name: "Bridal Collection",    slug: "bridal-collection",    productCount: 7,  status: "active" },
+  { _id: "9", name: "Maternity & Nursing",  slug: "maternity-nursing",   productCount: 5,  status: "active" },
+  { _id: "10", name: "Accessories",         slug: "accessories",         productCount: 11, status: "active" },
 ];
 
 export const AdminCategories = () => {
@@ -21,7 +26,10 @@ export const AdminCategories = () => {
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [formError, setFormError] = useState("");
+
+  const fileInputRef = useRef(null);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -34,7 +42,6 @@ export const AdminCategories = () => {
 
   const [validationErrors, setValidationErrors] = useState({});
 
-  // Helper: Slugify string
   const generateSlug = (text) => {
     return text
       .toLowerCase()
@@ -44,7 +51,6 @@ export const AdminCategories = () => {
       .replace(/-+/g, "-");
   };
 
-  // Fetch Categories from API
   const fetchCategories = async () => {
     setLoading(true);
     try {
@@ -63,27 +69,59 @@ export const AdminCategories = () => {
     fetchCategories();
   }, []);
 
-  // Form change handler with auto-slug generation
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    
     setFormData((prev) => {
       const updated = { ...prev, [name]: value };
-      // Auto generate slug when name changes if user hasn't manually edited slug separately
       if (name === "name") {
         updated.slug = generateSlug(value);
       }
       return updated;
     });
 
-    // Clear validation error for field
     if (validationErrors[name]) {
       setValidationErrors((prev) => ({ ...prev, [name]: "" }));
     }
     setFormError("");
   };
 
-  // Validate form inputs
+  // Direct Image File Upload Handler
+  const handleFileUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select a valid image file");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image size must be less than 5MB");
+      return;
+    }
+
+    setUploadingImage(true);
+    setFormError("");
+
+    try {
+      const response = await uploadService.uploadSingle(file, "/categories");
+      const uploadedUrl = response?.data?.url || response?.url || response?.data?.result?.url || "";
+
+      if (uploadedUrl) {
+        setFormData((prev) => ({ ...prev, imageUrl: uploadedUrl }));
+        toast.success("Category image uploaded!");
+      } else {
+        throw new Error("No URL returned from server");
+      }
+    } catch (err) {
+      console.error("Upload failed:", err);
+      toast.error(err.response?.data?.message || err.message || "Failed to upload category image");
+    } finally {
+      setUploadingImage(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
   const validateForm = () => {
     const errors = {};
     if (!formData.name.trim()) {
@@ -98,15 +136,10 @@ export const AdminCategories = () => {
       errors.slug = "Slug can only contain lowercase letters, numbers, and hyphens";
     }
 
-    if (formData.imageUrl.trim() && !/^https?:\/\/.+/.test(formData.imageUrl.trim())) {
-      errors.imageUrl = "Image URL must start with http:// or https://";
-    }
-
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
   };
 
-  // Open & Close Modal handlers
   const handleOpenModal = () => {
     setFormData({
       name: "",
@@ -121,13 +154,12 @@ export const AdminCategories = () => {
   };
 
   const handleCloseModal = () => {
-    if (submitting) return; // Prevent closing while submitting
+    if (submitting || uploadingImage) return;
     setIsModalOpen(false);
     setFormError("");
     setValidationErrors({});
   };
 
-  // Form Submit Handler (frontend ↔ backend integration)
   const handleSubmit = async (e) => {
     e.preventDefault();
     setFormError("");
@@ -150,10 +182,9 @@ export const AdminCategories = () => {
 
       await categoryService.createCategory(payload);
 
-      // Success flow
       toast.success("Category created successfully!");
       handleCloseModal();
-      await fetchCategories(); // In-place refresh without page reload
+      await fetchCategories();
     } catch (err) {
       console.error("Error creating category:", err);
       const apiMsg = err.response?.data?.message || err.response?.data?.error || err.message || "Failed to create category";
@@ -164,7 +195,6 @@ export const AdminCategories = () => {
     }
   };
 
-  // Delete Handler
   const handleDelete = async (id, name) => {
     if (!window.confirm(`Are you sure you want to delete category "${name}"?`)) return;
     try {
@@ -296,8 +326,8 @@ export const AdminCategories = () => {
 
       {/* ── Add Category Modal ── */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
-          <div className="bg-white border border-gray-200 rounded-sm shadow-xl max-w-md w-full overflow-hidden animate-fade-in">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4 overflow-y-auto">
+          <div className="bg-white border border-gray-200 rounded-sm shadow-xl max-w-md w-full my-8 overflow-hidden animate-fade-in">
             {/* Modal Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50">
               <div className="flex items-center gap-2">
@@ -308,7 +338,7 @@ export const AdminCategories = () => {
               </div>
               <button
                 onClick={handleCloseModal}
-                disabled={submitting}
+                disabled={submitting || uploadingImage}
                 className="p-1 text-gray-400 hover:text-gray-700 transition-colors cursor-pointer rounded-sm disabled:opacity-50"
               >
                 <X className="h-4.5 w-4.5" />
@@ -316,8 +346,7 @@ export const AdminCategories = () => {
             </div>
 
             {/* Modal Form */}
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
-              {/* Form level error banner */}
+            <form onSubmit={handleSubmit} className="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
               {formError && (
                 <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-sm text-red-700 text-[12px]">
                   <AlertCircle className="h-4 w-4 flex-shrink-0 text-red-500" />
@@ -333,14 +362,12 @@ export const AdminCategories = () => {
                 <input
                   type="text"
                   name="name"
-                  placeholder="e.g. Lingerie & Innerwear"
+                  placeholder="e.g. Sleepwear, Shapewear, Activewear"
                   value={formData.name}
                   onChange={handleInputChange}
                   disabled={submitting}
                   className={`w-full border px-3 py-2 text-[13px] text-gray-800 placeholder-gray-400 rounded-sm focus:outline-none ${
-                    validationErrors.name
-                      ? "border-red-500 focus:border-red-500"
-                      : "border-gray-300 focus:border-[#4a6d98]"
+                    validationErrors.name ? "border-red-500 focus:border-red-500" : "border-gray-300 focus:border-[#4a6d98]"
                   }`}
                 />
                 {validationErrors.name && (
@@ -356,14 +383,12 @@ export const AdminCategories = () => {
                 <input
                   type="text"
                   name="slug"
-                  placeholder="e.g. lingerie-innerwear"
+                  placeholder="e.g. sleepwear, shapewear"
                   value={formData.slug}
                   onChange={handleInputChange}
                   disabled={submitting}
                   className={`w-full border px-3 py-2 text-[13px] font-mono text-gray-800 placeholder-gray-400 rounded-sm focus:outline-none ${
-                    validationErrors.slug
-                      ? "border-red-500 focus:border-red-500"
-                      : "border-gray-300 focus:border-[#4a6d98]"
+                    validationErrors.slug ? "border-red-500 focus:border-red-500" : "border-gray-300 focus:border-[#4a6d98]"
                   }`}
                 />
                 {validationErrors.slug && (
@@ -387,27 +412,78 @@ export const AdminCategories = () => {
                 />
               </div>
 
-              {/* Image URL field */}
+              {/* ── Category Image: Direct Upload & Preview ── */}
               <div>
                 <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-600 mb-1">
-                  Image URL <span className="text-gray-400 font-normal">(Optional)</span>
+                  Category Image
                 </label>
+
                 <input
-                  type="text"
-                  name="imageUrl"
-                  placeholder="https://example.com/category-image.jpg"
-                  value={formData.imageUrl}
-                  onChange={handleInputChange}
-                  disabled={submitting}
-                  className={`w-full border px-3 py-2 text-[13px] text-gray-800 placeholder-gray-400 rounded-sm focus:outline-none ${
-                    validationErrors.imageUrl
-                      ? "border-red-500 focus:border-red-500"
-                      : "border-gray-300 focus:border-[#4a6d98]"
-                  }`}
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileUpload}
+                  accept="image/jpeg,image/png,image/webp,image/avif"
+                  className="hidden"
                 />
-                {validationErrors.imageUrl && (
-                  <p className="text-[11px] text-red-500 mt-1">{validationErrors.imageUrl}</p>
+
+                {formData.imageUrl ? (
+                  <div className="relative border border-gray-200 rounded-sm p-3 bg-gray-50 flex items-center gap-3">
+                    <div className="h-14 w-14 rounded-sm bg-white border border-gray-200 overflow-hidden flex-shrink-0">
+                      <img src={formData.imageUrl} alt="Category preview" className="h-full w-full object-cover" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1 text-[12px] font-semibold text-emerald-600">
+                        <CheckCircle className="h-3.5 w-3.5" /> Image Ready
+                      </div>
+                      <p className="text-[11px] text-gray-400 font-mono truncate mt-0.5">{formData.imageUrl}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setFormData((prev) => ({ ...prev, imageUrl: "" }))}
+                      className="p-1 text-gray-400 hover:text-red-500 transition-colors cursor-pointer"
+                      title="Remove image"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <div
+                    onClick={() => fileInputRef.current?.click()}
+                    className={`border-2 border-dashed rounded-sm p-4 text-center cursor-pointer transition-colors ${
+                      uploadingImage
+                        ? "border-[#4a6d98] bg-[#4a6d98]/5 cursor-wait"
+                        : "border-gray-300 hover:border-[#0d2137] bg-gray-50 hover:bg-gray-100/60"
+                    }`}
+                  >
+                    {uploadingImage ? (
+                      <div className="flex flex-col items-center justify-center space-y-2 py-1">
+                        <Loader2 className="h-5 w-5 text-[#0d2137] animate-spin" />
+                        <p className="text-[12px] font-semibold text-gray-700">Uploading image to ImageKit...</p>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center space-y-1 py-1">
+                        <Upload className="h-5 w-5 text-gray-400" />
+                        <p className="text-[12px] font-semibold text-gray-800">
+                          Click to select image file from computer
+                        </p>
+                        <p className="text-[10px] text-gray-400">PNG, JPG, WEBP, AVIF (Max 5MB)</p>
+                      </div>
+                    )}
+                  </div>
                 )}
+
+                <div className="mt-2 flex items-center gap-2">
+                  <span className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Or enter URL:</span>
+                  <input
+                    type="text"
+                    name="imageUrl"
+                    placeholder="https://example.com/image.jpg"
+                    value={formData.imageUrl}
+                    onChange={handleInputChange}
+                    disabled={submitting || uploadingImage}
+                    className="flex-1 border border-gray-300 px-2.5 py-1 text-[12px] text-gray-800 placeholder-gray-400 rounded-sm focus:border-[#4a6d98] focus:outline-none"
+                  />
+                </div>
               </div>
 
               {/* Status field */}
@@ -432,14 +508,14 @@ export const AdminCategories = () => {
                 <button
                   type="button"
                   onClick={handleCloseModal}
-                  disabled={submitting}
+                  disabled={submitting || uploadingImage}
                   className="px-4 py-2 text-[12px] font-semibold text-gray-600 hover:bg-gray-100 transition-colors rounded-sm cursor-pointer disabled:opacity-50"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  disabled={submitting}
+                  disabled={submitting || uploadingImage}
                   className="flex items-center gap-2 bg-[#0d2137] text-white px-5 py-2 text-[12px] font-bold uppercase tracking-wider hover:bg-[#1a3a5c] transition-colors rounded-sm cursor-pointer disabled:opacity-50"
                 >
                   {submitting ? (
