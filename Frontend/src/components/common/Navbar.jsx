@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ShoppingBag, User, Search, X, Menu,
-  LogOut, ShieldCheck, ChevronDown, ChevronRight,
+  LogOut, ShieldCheck, ChevronDown, ChevronRight, Heart,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useCartStore } from "../../store/useCartStore";
@@ -499,7 +499,10 @@ export const Navbar = () => {
                       <ShieldCheck className="h-5 w-5" />
                     </Link>
                   )}
-                  <Link to="/orders" className="p-1.5 text-gray-600 hover:text-gray-900 transition-colors" aria-label="Account">
+                  <Link to="/wishlist" className="p-1.5 text-gray-600 hover:text-gray-900 transition-colors" aria-label="Wishlist">
+                    <Heart className="h-5 w-5" />
+                  </Link>
+                  <Link to="/profile" className="p-1.5 text-gray-600 hover:text-gray-900 transition-colors" aria-label="Profile">
                     <User className="h-5 w-5" />
                   </Link>
                   <button

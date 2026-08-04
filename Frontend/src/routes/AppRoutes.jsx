@@ -7,6 +7,8 @@ import { ProductDetailPage } from "../pages/customer/ProductDetailPage";
 import { CartPage } from "../pages/customer/CartPage";
 import { CheckoutPage } from "../pages/customer/CheckoutPage";
 import { OrdersPage } from "../pages/customer/OrdersPage";
+import { WishlistPage } from "../pages/customer/WishlistPage";
+import { ProfilePage } from "../pages/customer/ProfilePage";
 
 import { AuthLayout } from "../layouts/AuthLayout";
 import { LoginPage } from "../pages/auth/LoginPage";
@@ -41,6 +43,8 @@ export const AppRoutes = () => {
         <Route element={<ProtectedRoute />}>
           <Route path="checkout" element={<CheckoutPage />} />
           <Route path="orders" element={<OrdersPage />} />
+          <Route path="wishlist" element={<WishlistPage />} />
+          <Route path="profile" element={<ProfilePage />} />
         </Route>
       </Route>
 
