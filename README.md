@@ -1,7 +1,7 @@
 # Élanor – Luxury Fashion E-Commerce Platform
 
 <p align="center">
-  <img src="./Frontend/public/banner.png" alt="Élanor Banner" width="100%">
+  <img src="banner1.png" alt="Élanor banner" width="100%">
 </p>
 
 <p align="center">
@@ -373,12 +373,6 @@ Optimized for:
 # 👨‍💻 Developer
 
 **Aditya Sarse**
-
----
-
-# 📄 License
-
-This project is developed for **educational and portfolio purposes**.
 
 ---
 
