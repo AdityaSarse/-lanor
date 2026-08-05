@@ -1,5 +1,5 @@
 Élanor - Luxury Fashion E-Commerce Platform
-<p align="center"> <img src="./Frontend/public/p1.png" alt="Élanor Banner" width="100%" /> </p> <p align="center"> <strong>A Modern Full-Stack Luxury Fashion E-Commerce Platform</strong><br> Built using the MERN Stack with secure authentication, admin dashboard, product management, Razorpay payments, ImageKit integration, and a premium shopping experience. </p>
+<p align="center"> <img src="./Frontend/public/banner1.png" alt="Élanor Banner" width="100%" /> </p> <p align="center"> <strong>A Modern Full-Stack Luxury Fashion E-Commerce Platform</strong><br> Built using the MERN Stack with secure authentication, admin dashboard, product management, Razorpay payments, ImageKit integration, and a premium shopping experience. </p>
 📖 Overview
 
 Élanor is a production-ready luxury fashion e-commerce platform designed to deliver a seamless shopping experience for customers while providing administrators with a comprehensive management dashboard.
