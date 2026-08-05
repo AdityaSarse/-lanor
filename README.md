@@ -1,283 +1,320 @@
-Élanor - Luxury Fashion E-Commerce Platform
-<p align="center"> <img src="./Frontend/public/banner1.png" alt="Élanor Banner" width="100%" /> </p> <p align="center"> <strong>A Modern Full-Stack Luxury Fashion E-Commerce Platform</strong><br> Built using the MERN Stack with secure authentication, admin dashboard, product management, Razorpay payments, ImageKit integration, and a premium shopping experience. </p>
-📖 Overview
+# Élanor – Luxury Fashion E-Commerce Platform
 
-Élanor is a production-ready luxury fashion e-commerce platform designed to deliver a seamless shopping experience for customers while providing administrators with a comprehensive management dashboard.
+<p align="center">
+  <img src="./Frontend/public/banner.png" alt="Élanor Banner" width="100%">
+</p>
 
-The platform enables users to browse fashion collections, manage their shopping cart and wishlist, securely complete purchases, and track orders. Administrators can efficiently manage products, categories, brands, customers, coupons, orders, payments, and analytics through a modern dashboard.
+<p align="center">
+  <strong>A Modern Full-Stack Luxury Fashion E-Commerce Platform</strong><br>
+  Built with the MERN Stack to deliver a premium online shopping experience with secure authentication, product management, Razorpay payments, ImageKit integration, and a powerful admin dashboard.
+</p>
 
-✨ Features
-👤 Customer Features
-User Registration & Login
-JWT Authentication
-Secure Password Encryption
-Forgot & Reset Password
-Profile Management
-Address Management
-Browse Products
-Search Products
-Category Filtering
-Brand Filtering
-Price Filtering
-Wishlist
-Shopping Cart
-Coupon Support
-Razorpay Payment Gateway
-Order Tracking
-Order History
-Product Reviews & Ratings
-Responsive Design
-🛠 Admin Features
-Secure Admin Login
-Dashboard Analytics
-Product Management
-Category Management
-Brand Management
-Customer Management
-Order Management
-Coupon Management
-Review Moderation
-Inventory Management
-Image Upload
-Notifications
-Sales Overview
-🚀 Tech Stack
-Frontend
-React.js
-Vite
-React Router DOM
-Axios
-Tailwind CSS
-Framer Motion
-React Context API
-Lucide React
-Backend
-Node.js
-Express.js
-MongoDB
-Mongoose
-JWT Authentication
-Bcrypt
-Multer
-ImageKit SDK
-Razorpay SDK
-Nodemailer
-Cookie Parser
-CORS
-Database
-MongoDB Atlas
-Cloud Services
-ImageKit
-Razorpay
-Render
-Vercel
-📂 Project Structure
+---
+
+## 📖 Overview
+
+Élanor is a production-ready luxury fashion e-commerce platform designed to provide a seamless shopping experience for customers while offering administrators complete control over products, orders, inventory, customers, and sales analytics.
+
+The platform includes secure authentication, responsive UI, advanced product filtering, wishlist, shopping cart, Razorpay payment gateway, order tracking, and a feature-rich admin dashboard.
+
+---
+
+# ✨ Features
+
+## 👤 Customer Features
+
+- User Registration & Login
+- JWT Authentication
+- Secure Password Encryption
+- Forgot & Reset Password
+- Profile Management
+- Address Management
+- Browse Products
+- Search Products
+- Category & Brand Filters
+- Price Filtering
+- Wishlist
+- Shopping Cart
+- Coupon Support
+- Razorpay Payment Integration
+- Order Tracking
+- Order History
+- Product Reviews & Ratings
+- Fully Responsive Design
+
+---
+
+## 🛠 Admin Features
+
+- Secure Admin Login
+- Dashboard Analytics
+- Product Management
+- Category Management
+- Brand Management
+- Customer Management
+- Order Management
+- Coupon Management
+- Review Moderation
+- Inventory Management
+- Sales Analytics
+- Revenue Overview
+- Image Upload
+- Notifications
+
+---
+
+# 🚀 Tech Stack
+
+## Frontend
+
+- React.js
+- Vite
+- React Router DOM
+- Axios
+- Tailwind CSS
+- Framer Motion
+- React Context API
+- Lucide React
+
+### Backend
+
+- Node.js
+- Express.js
+- MongoDB
+- Mongoose
+- JWT Authentication
+- Bcrypt
+- Multer
+- ImageKit SDK
+- Razorpay SDK
+- Nodemailer
+- Cookie Parser
+- CORS
+
+### Database
+
+- MongoDB Atlas
+
+### Cloud Services
+
+- ImageKit
+- Razorpay
+- Render
+- Vercel
+
+---
+
+# 📂 Project Structure
+
+```text
 Elanor/
 │
 ├── Backend/
 │   ├── src/
-│   │
-│   ├── config/
-│   ├── controllers/
-│   ├── middlewares/
-│   ├── models/
-│   ├── routes/
-│   ├── services/
-│   ├── utils/
-│   ├── uploads/
-│   ├── app.js
-│   └── server.js
+│   │   ├── config/
+│   │   ├── controllers/
+│   │   ├── middlewares/
+│   │   ├── models/
+│   │   ├── routes/
+│   │   ├── services/
+│   │   ├── utils/
+│   │   ├── uploads/
+│   │   ├── app.js
+│   │   └── server.js
 │
 ├── Frontend/
 │   ├── public/
 │   ├── src/
-│   │
-│   ├── assets/
-│   ├── components/
-│   ├── context/
-│   ├── hooks/
-│   ├── layouts/
-│   ├── pages/
-│   ├── routes/
-│   ├── services/
-│   ├── utils/
-│   └── App.jsx
+│   │   ├── assets/
+│   │   ├── components/
+│   │   ├── context/
+│   │   ├── hooks/
+│   │   ├── layouts/
+│   │   ├── pages/
+│   │   ├── routes/
+│   │   ├── services/
+│   │   ├── utils/
+│   │   └── App.jsx
 │
 └── README.md
-🔐 Authentication
+```
 
-The application uses JWT-based authentication with access and refresh tokens.
+---
 
-Features include:
+# 🔐 Authentication
 
-User Registration
-User Login
-Admin Login
-Protected Routes
-Role-Based Authorization
-Persistent Authentication
-Secure Logout
-🛍 Product Management
+- JWT Access Token
+- Refresh Token
+- User Registration
+- User Login
+- Admin Login
+- Protected Routes
+- Role-Based Authorization
+- Persistent Authentication
+- Secure Logout
 
-Administrators can:
+---
 
-Add Products
-Edit Products
-Delete Products
-Upload Images
-Manage Variants
-Manage Sizes
-Manage Colors
-Manage Stock
-Set Discounts
-Feature Products
-📦 Order Management
-Place Orders
-Order History
-Order Details
-Payment Status
-Order Status Updates
-Cancel Orders
-Track Deliveries
-❤️ Wishlist
+# 🛍 Product Management
 
-Customers can:
+- Add Products
+- Edit Products
+- Delete Products
+- Upload Images
+- Manage Variants
+- Manage Sizes
+- Manage Colors
+- Manage Stock
+- Set Discounts
+- Featured Products
 
-Add Products
-Remove Products
-Move to Cart
-🛒 Shopping Cart
-Add Products
-Update Quantity
-Remove Products
-Apply Coupons
-Dynamic Price Calculation
-💳 Payment Gateway
+---
 
-Integrated with Razorpay.
+# 📦 Order Management
+
+- Place Orders
+- Order History
+- Order Details
+- Payment Verification
+- Order Status Updates
+- Cancel Orders
+- Delivery Tracking
+
+---
+
+# ❤️ Wishlist
+
+- Add Products
+- Remove Products
+- Move Products to Cart
+
+---
+
+# 🛒 Shopping Cart
+
+- Add Products
+- Update Quantity
+- Remove Products
+- Apply Coupons
+- Dynamic Price Calculation
+
+---
+
+# 💳 Payment Gateway
+
+Integrated with **Razorpay**
 
 Supports:
 
-Secure Payments
-Test Mode
-Payment Verification
-Order Creation
-🖼 Image Management
+- Secure Payments
+- Payment Verification
+- Order Creation
+- Test Mode
 
-Images are managed using ImageKit.
+---
+
+# 🖼 Image Management
+
+Powered by **ImageKit**
 
 Features:
 
-Product Image Upload
-Optimized Image Delivery
-Image Compression
-CDN Support
-📊 Admin Dashboard
+- Product Image Upload
+- CDN Delivery
+- Image Compression
+- Optimized Images
 
-Dashboard includes:
+---
 
-Revenue Overview
-Orders
-Customers
-Products
-Sales Analytics
-Recent Orders
-Inventory Status
-📱 Responsive Design
+# 📊 Admin Dashboard
 
-Fully optimized for:
+Includes:
 
-Desktop
-Laptop
-Tablet
-Mobile
-⚡ Performance Optimizations
-Lazy Loading
-Image Optimization
-Optimized API Calls
-Code Splitting
-Responsive Images
-Efficient State Management
-🔧 Environment Variables
-Backend (.env)
-MONGO_URI=
+- Revenue Analytics
+- Sales Overview
+- Customer Statistics
+- Product Statistics
+- Recent Orders
+- Inventory Monitoring
 
-PORT=3000
+---
 
-JWT_SECRET=
+# 📱 Responsive Design
 
-ACCESS_TOKEN_SECRET=
+Optimized for:
 
-REFRESH_TOKEN_SECRET=
+- Desktop
+- Laptop
+- Tablet
+- Mobile
 
-CORS_ORIGIN=
+---
 
-IMAGEKIT_PUBLIC_KEY=
-IMAGEKIT_PRIVATE_KEY=
-IMAGEKIT_URL_ENDPOINT=
+# ⚡ Performance Optimizations
 
-RAZORPAY_KEY_ID=
-RAZORPAY_KEY_SECRET=
-RAZORPAY_WEBHOOK_SECRET=
-Frontend (.env)
-VITE_API_URL=
-VITE_RAZORPAY_KEY_ID=
-💻 Installation
-Clone Repository
-git clone https://github.com/your-username/Elanor.git
+- Lazy Loading
+- Code Splitting
+- Image Optimization
+- Optimized API Calls
+- Efficient State Management
+- Responsive Images
 
-cd Elanor
-Backend Setup
-cd Backend
+---
 
-npm install
+# 🌐 Deployment
 
-npm run dev
-Frontend Setup
-cd Frontend
+| Service | Platform |
+|----------|----------|
+| Frontend | Vercel |
+| Backend | Render |
+| Database | MongoDB Atlas |
+| Image Storage | ImageKit |
+| Payments | Razorpay |
 
-npm install
+---
 
-npm run dev
-🌐 Deployment
-Frontend
-Vercel
-Backend
-Render
-Database
-MongoDB Atlas
-Images
-ImageKit
-📸 Screens
-Landing Page
-Product Listing
-Product Details
-Shopping Cart
-Wishlist
-Checkout
-User Dashboard
-Admin Dashboard
-Product Management
-Order Management
-📌 Future Enhancements
-AI Product Recommendations
-Recently Viewed Products
-Product Comparison
-Email Notifications
-Inventory Alerts
-Multi-language Support
-Multi-currency Support
-Advanced Analytics
-Seller Portal
-Dark Mode
-👨‍💻 Developer
+# 📸 Screens
 
-Aditya Sarse
+- Landing Page
+- Product Listing
+- Product Details
+- Shopping Cart
+- Wishlist
+- Checkout
+- User Dashboard
+- Admin Dashboard
+- Product Management
+- Order Management
 
-GitHub: https://github.com/AdityaSarse
+---
 
-📄 License
+# 📌 Future Enhancements
 
-This project is developed for educational and portfolio purposes.
+- AI Product Recommendations
+- Recently Viewed Products
+- Product Comparison
+- Email Notifications
+- Inventory Alerts
+- Multi-language Support
+- Multi-currency Support
+- Advanced Analytics
+- Seller Portal
+- Dark Mode
 
-<p align="center"> ⭐ If you found this project helpful, consider giving it a star on GitHub! </p>
+---
+
+# 👨‍💻 Developer
+
+**Aditya Sarse**
+
+---
+
+# 📄 License
+
+This project is developed for **educational and portfolio purposes**.
+
+---
+
+## ⭐ Support
+
+If you found this project helpful, consider giving it a **Star** on GitHub.
