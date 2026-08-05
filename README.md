@@ -273,18 +273,85 @@ Optimized for:
 
 ---
 
-# 📸 Screens
+# 📸 Screenshots
 
-- Landing Page
-- Product Listing
-- Product Details
-- Shopping Cart
-- Wishlist
-- Checkout
-- User Dashboard
-- Admin Dashboard
-- Product Management
-- Order Management
+## 🏠 Home Page
+
+<p align="center">
+  <img src="./home.png" alt="Home Page" width="100%">
+</p>
+
+---
+
+## 🛍 Product Listing
+
+<p align="center">
+  <img src="./products.png" alt="Product Listing" width="100%">
+</p>
+
+---
+
+## 📄 Product Details
+
+<p align="center">
+  <img src="./product-details.png" alt="Product Details" width="100%">
+</p>
+
+---
+
+## ❤️ Wishlist
+
+<p align="center">
+  <img src="./wishlist.png" alt="Wishlist" width="100%">
+</p>
+
+---
+
+## 🛒 Shopping Cart
+
+<p align="center">
+  <img src="./cart.png" alt="Shopping Cart" width="100%">
+</p>
+
+---
+
+## 💳 Checkout
+
+<p align="center">
+  <img src="./checkout.png" alt="Checkout" width="100%">
+</p>
+
+---
+
+## 👤 User Dashboard
+
+<p align="center">
+  <img src="./user-dashboard.png" alt="User Dashboard" width="100%">
+</p>
+
+---
+
+## 🛠 Admin Dashboard
+
+<p align="center">
+  <img src="./admin-dashboard.png" alt="Admin Dashboard" width="100%">
+</p>
+
+---
+
+## 📦 Product Management
+
+<p align="center">
+  <img src="./product-management.png" alt="Product Management" width="100%">
+</p>
+
+---
+
+## 📑 Order Management
+
+<p align="center">
+  <img src="./order-management.png" alt="Order Management" width="100%">
+</p>
 
 ---
 
