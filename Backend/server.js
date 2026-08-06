@@ -698,6 +698,8 @@ const SEED_PRODUCTS = [
   },
 ];
 
+const seedUploads = require("./seedUploadsProducts");
+
 async function ensureSeedData() {
   try {
     const categoryMap = {};
@@ -724,7 +726,10 @@ async function ensureSeedData() {
         });
       }
     }
-    console.log("Database seeded with products successfully.");
+    console.log("Database seeded with default products successfully.");
+
+    // Auto-seed uploaded products from src/uploads
+    await seedUploads(false);
   } catch (err) {
     console.warn("Auto-seeding check error:", err.message);
   }
